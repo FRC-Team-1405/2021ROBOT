@@ -1,0 +1,1 @@
+This library is a fork of the Stryke Force Third Coast Java Libraries. https://github.com/strykeforce/thirdcoast

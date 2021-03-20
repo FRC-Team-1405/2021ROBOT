@@ -24,8 +24,7 @@ public class ControlPanel extends SubsystemBase {
    */
 
   WPI_TalonSRX controlMotor = new WPI_TalonSRX(Constants.controlPanel);
-  Color[] colors = new Color[]
-  [[[[]]]] {ColorSensor.Target.BLUE, ColorSensor.Target.GREEN, ColorSensor.Target.RED, ColorSensor.Target.YELLOW,};
+  Color[] colors = new Color[] {ColorSensor.Target.BLUE, ColorSensor.Target.GREEN, ColorSensor.Target.RED, ColorSensor.Target.YELLOW,};
   //CANSparkMax controlMotor = new CANSparkMax(Constants.controlPanel, MotorType.kBrushless);
 
   private ColorSensor sensor = new ColorSensor();

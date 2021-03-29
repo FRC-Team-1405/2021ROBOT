@@ -9,15 +9,10 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
-
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
@@ -31,11 +26,6 @@ public class ArcadeDrive extends SubsystemBase {
    * Creates a new ArcadeDrive.
    */
   
-  WPI_TalonFX driveLeft = new WPI_TalonFX(Constants.driveLeft);
-  WPI_TalonFX driveRight = new WPI_TalonFX(Constants.driveRight);
-  WPI_TalonFX driveLeftSlave = new WPI_TalonFX(Constants.driveLeftSlave);
-  WPI_TalonFX driveRightSlave = new WPI_TalonFX(Constants.driveRightSlave);
-  DifferentialDrive driveBase = new DifferentialDrive(driveLeft, driveRight); 
 
   public DigitalInput driveBaseIndicator = new DigitalInput(1); 
 
@@ -45,18 +35,6 @@ public class ArcadeDrive extends SubsystemBase {
   
   public ArcadeDrive() {
     SmartDashboard.putBoolean("Drive Forward", driveForward);
-    driveLeft.configNeutralDeadband(0.04, 10);
-    driveRight.configNeutralDeadband(0.04, 10);
-
-    driveLeft.set(ControlMode.PercentOutput, 0);
-    driveRight.set(ControlMode.PercentOutput, 0);
-    driveLeftSlave.set(ControlMode.Follower, Constants.driveLeft);
-    driveRightSlave.set(ControlMode.Follower, Constants.driveRight);
-
-    driveBase.setDeadband(0.0);
-
-    driveLeft.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
-    driveRight.configSelectedFeedbackSensor(FeedbackDevice.IntegratedSensor);
   }
 
   public void toggleDriveDirection(){
@@ -66,28 +44,20 @@ public class ArcadeDrive extends SubsystemBase {
 
   public void driveRobot(double xSpeed, double zRotation, boolean squareInputs){
     if(driveForward){
-      driveBase.arcadeDrive(xSpeed, zRotation, squareInputs);
     }else{
-      driveBase.arcadeDrive(-xSpeed, zRotation, squareInputs);
     }
   }
 
   public void driveRobot(DoubleSupplier xSpeedSupplier, double zRotation, boolean squareInputs){
     if(driveForward){
-      driveBase.arcadeDrive(xSpeedSupplier.getAsDouble(), zRotation, squareInputs);
     }else{
-      driveBase.arcadeDrive(-xSpeedSupplier.getAsDouble(), zRotation, squareInputs);
     }
   }
 
   public void resetDistance(){
-    driveLeft.setSelectedSensorPosition(0);
-    driveRight.setSelectedSensorPosition(0);
   }
 
   public void stop(){
-    driveLeft.set(ControlMode.PercentOutput, 0);
-    driveRight.set(ControlMode.PercentOutput, 0);
   }
 
   public double getVelocity(){
@@ -115,8 +85,6 @@ public class ArcadeDrive extends SubsystemBase {
         SmartDashboard.putNumber("Velocity", getVelocity());
         SmartDashboard.putNumber("Heading", getHeading());
       }
-      odometry.update(Rotation2d.fromDegrees(-getHeading()), driveLeft.getSelectedSensorPosition()*Constants.VelocityConversions.SensorVelocityToMetersPerSecond,
-                      -driveRight.getSelectedSensorPosition()*Constants.VelocityConversions.SensorVelocityToMetersPerSecond);
     }
     public void resetPosition(){
       resetPosition(0,0);
@@ -130,8 +98,6 @@ public class ArcadeDrive extends SubsystemBase {
       return odometry.getPoseMeters();
     }
     public void resetOdometry(Pose2d pose) {
-      driveLeft.setSelectedSensorPosition(0);
-      driveRight.setSelectedSensorPosition(0);
       odometry.resetPosition(pose, Rotation2d.fromDegrees(getHeading()));
     }
      
@@ -140,24 +106,10 @@ public class ArcadeDrive extends SubsystemBase {
         SmartDashboard.putNumber("ArcadeDrive/Speed Left", Constants.VelocityConversions.MetersPerSecondToVelocity*leftSpeed);
         SmartDashboard.putNumber("ArcadeDrive/Speed Right", Constants.VelocityConversions.MetersPerSecondToVelocity*rightSpeed);
       }
-        driveLeft.set(ControlMode.Velocity, Constants.VelocityConversions.MetersPerSecondToVelocity*leftSpeed); 
-      driveRight.set(ControlMode.Velocity, - Constants.VelocityConversions.MetersPerSecondToVelocity*rightSpeed); 
     }
     public void resetEncoder(){
-      driveLeft.setSelectedSensorPosition(0);
-      driveRight.setSelectedSensorPosition(0);
       if(!Robot.fmsAttached){
         SmartDashboard.putNumber("ArcadeDrive/Distance", 0);
       }
-    }
-    public double getDistance(){
-      double distance = (((driveLeft.getSelectedSensorPosition()
-              -driveRight.getSelectedSensorPosition())/2.0)
-                  *Constants.VelocityConversions.SensorVelocityToMetersPerSecond);
-      if(!Robot.fmsAttached){
-        SmartDashboard.putNumber("ArcadeDrive/Distance", distance);
-      }
-      return distance;
-
     }
 }

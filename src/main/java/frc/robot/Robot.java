@@ -59,16 +59,6 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
   }
 
-  /**
-   * This function is called once each time the robot enters Disabled mode.
-   */
-  @Override
-  public void disabledInit() {
-    m_robotContainer.batteryMonitor.schedule();
-    m_robotContainer.underGlow.resetTeamColor();;
-    m_robotContainer.underGlow.schedule();
-  }
-
   @Override
   public void disabledPeriodic() {
     CommandScheduler.getInstance().run();
@@ -81,8 +71,6 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
     // m_autonomousCommand = m_robotContainer.getAutonomousCommand();
     fmsAttached = DriverStation.getInstance().isFMSAttached();
-    m_robotContainer.underGlow.resetTeamColor();;
-    m_robotContainer.underGlow.schedule();
     // m_robotContainer.launcher.stopTurret();
     m_robotContainer.swerveDriveBase.stop();
 
@@ -109,9 +97,7 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.cancel(); 
     }
     fmsAttached = DriverStation.getInstance().isFMSAttached();
-    m_robotContainer.underGlow.resetTeamColor();
-    m_robotContainer.underGlow.schedule();
-    m_robotContainer.batteryMonitor.schedule();
+
     // m_robotContainer.launcher.stopTurret();
     m_robotContainer.swerveDriveBase.stop(); 
     logger.fine("----Drivebase----Stopped----"); 

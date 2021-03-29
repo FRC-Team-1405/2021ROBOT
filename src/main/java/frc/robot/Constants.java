@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
 
@@ -22,12 +21,7 @@ import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
  * wherever the constants are needed, to reduce verbosity.
  */
 public final class Constants { 
-    public final static int PDP = 0;
-
-    public final static int driveLeft = 1;
-    public final static int driveRight = 2;
-    public final static int driveLeftSlave = 3;
-    public final static int driveRightSlave = 4;     
+    public final static int PDP = 0;    
 
     public final static class SwerveBase {
         public final static int driveFrontLeft = 1;
@@ -49,22 +43,22 @@ public final class Constants {
         public final static double maxSpeed = 1.0;  
         public final static double maxAngularAccelerartion = Math.PI; 
         public final static double maxAngularSpeed = Math.PI;  
+    }
 
-      
+    public static class Hood {
+        public final static int maxError = 10;
     }
 
     public final static int intakeTalon = 5;
     public final static int intakeDeploy = 6;
     public final static int indexerid = 7;
     public final static int triggerid = 8;
-    public final static int shooterLeft = 9;
-    public final static int shooterRight = 10; 
-    public final static int turretid = 11;
+    public final static int shooterMaster = 9;
+    public final static int shooterSlave = 10; 
+    public final static int shooterAngle = 11;
 
     public final static int leftScissor = 12;
     public final static int rightScissor = 13;
-
-    public final static int controlPanel = 14; 
 
     public final static int swerveIntakeTalon = 15; 
     public final static int swerveIntakeDeployTalon = 16; 
@@ -97,19 +91,7 @@ public final class Constants {
     public final static double goalX = 2.404364;
 
     public class ShooterConstants {
-        public final static int angleMin = 0;
-        public final static int angleMax = 70;
-        public final static int unitsMin = -1900;
-        public final static int unitsMax = 2000;
-        public final static int turretCenter = 0;
-        public final static double elevationMin = 0.2;
-        //I changed the elevationMax constant so that I could use the lidar camera
-        //It was at 0.4
-        public final static double elevationMax = 1.0;
-        public final static double limelightError = 2.0;
-        public final static double triggerSpeed = .8; 
-        public final static double unitsPerAngle = (unitsMax - unitsMin) / (angleMax - angleMin);
-        public final static double anglesPerUnit = (angleMax - angleMin) / (unitsMax - unitsMin);
+        public static final int acceptableError = 250;
     } 
 
      //TrajectoryDrive constants
@@ -140,31 +122,6 @@ public final class Constants {
         public static double kF = 0.0;
     }
 
-    public static class BalancePID {
-        public static double kP = 0.0;
-        public static double kI = 0.0;
-        public static double kD = 0.0;
-        public static double kF = 0.0;
-    }
-
-    public static class Lidar {
-        public final static int BAUD_RATE = 9600;
-        public static final SerialPort.Port PORT = SerialPort.Port.kUSB1;
-        public static final int DATA_BITS = 8;
-        public static final SerialPort.Parity PARITY = SerialPort.Parity.kNone;
-        public static final SerialPort.StopBits STOP_BITS = SerialPort.StopBits.kOne;
-        public static final String LIDAR_KEY = "LIDAR VALUES";
-    }
-
-    public static class ControlPanelConstants {
-        public final static int ROTATION_CONTROL_DISTANCE = 10000; 
-        public final static int ROTATION_SEGMENT_DISTANCE = 417;
-        public final static double SPEED = .3; 
-        public final static int COLOR_ADJUST = 1000;
-        public final static int POSITION_ADJUST = 50;
-        // TODO At some point, define a value that will set a motor rotation equivalent to turning one segment on the control panel (1'9/16")
-    }
-
     public static class IntakeConstants {
         public final static int DEPLOY_POSITION = -1500;
         public final static int RETRACT_POSITION = -250;
@@ -193,28 +150,5 @@ public final class Constants {
         public final static double VelocityP = 0.5;
         public final static double VelocityI = 0;
         public final static double VelocityD = 0;
-    }
-
-    public class BatteryMonitor{
-        public final static double maxVoltage = 12.5;
-        public final static double minVoltage = 7;
-        //ledCount has to be a multiple of 3
-        public final static int ledStart = 0;
-        public final static int ledStop = 15;
-        public final static int ledCount = ledStop - ledStart;
-        public final static int brightness = 100;
-    }
-
-    public class UnderGlow{
-        //The under glow has 43 leds
-        public final static int ledStart = 15;
-        public final static int ledStop = 59;
-        public final static int ledCount = ledStop - ledStart;
-        public final static int brightness = 100;
-    }
-
-    public class PWM_Port{
-        public final static int leds = 8;
-        public final static int totalLEDCount = UnderGlow.ledCount + BatteryMonitor.ledCount;
     }
 }

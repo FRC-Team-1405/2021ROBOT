@@ -34,13 +34,13 @@ public final class Constants {
         public final static int azimuthBackLeft = 23;
         public final static int azimuthBackRight = 24; 
 
-        public final static Translation2d frontLeftLocation = new Translation2d(0.279, 0.203);
-        public final static Translation2d frontRightLocation = new Translation2d(0.254, -0.203);
-        public final static Translation2d backLeftLocation = new Translation2d(-0.279, 0.330);
-        public final static Translation2d backRightLocation = new Translation2d(-0.254, -0.330); 
+        public final static Translation2d frontLeftLocation = new Translation2d(0.330, -0.279);
+        public final static Translation2d frontRightLocation = new Translation2d(0.330, -0.279);
+        public final static Translation2d backLeftLocation = new Translation2d(-0.330, -0.279);
+        public final static Translation2d backRightLocation = new Translation2d(-0.330, 0.279); 
 
-        public final static double maxAcceleration = 1.0; 
-        public final static double maxSpeed = 1.0;  
+        public final static double maxAcceleration = 0.1; 
+        public final static double maxSpeed = 1;  
         public final static double maxAngularAccelerartion = Math.PI; 
         public final static double maxAngularSpeed = Math.PI;  
     }
@@ -135,8 +135,9 @@ public final class Constants {
         public final static double SwerveSensorUnitsPerRotation = 2048; 
         public final static double SwerveWheelCircumference = (4 * Math.PI); 
         public final static double DriveBaseReduction = 8.68;
-        public final static double InchesPerMeter = 39.37;
-        public final static double SwerveMetersPerSecondToSensorVelocity = ((SensorUnitsPerRotation * SwerveWheelCircumference * InchesPerMeter) * 6) * SensorTimePerSec;                                  
+        public final static double InchesPerMeter = 39.37; 
+        public final static double ScaleFactor = 1.1; 
+        public final static double SwerveMetersPerSecondToSensorVelocity = ((SensorUnitsPerRotation * (1 / SwerveWheelCircumference) * InchesPerMeter)) * 6 / SensorTimePerSec;                                  
         public final static double SensorVelocityToMetersPerSecond = (1.0 / SensorUnitsPerRotation) * (1.0 / DriveBaseReduction) * WheelCircumference * (1.0 / InchesPerMeter); 
         public final static double SwerveSensorVelocityToMetersPerSecond = (((1.0 / SwerveSensorUnitsPerRotation) * SwerveWheelCircumference * (1 / InchesPerMeter)) / 6) * SensorTimePerSec;  
         public final static double SensorToMetersCIMBot = 1/SensorUnitsPerRotation * WheelCircumference * (1.0 / InchesPerMeter) / 2.0; 

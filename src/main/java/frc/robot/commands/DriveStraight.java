@@ -36,9 +36,9 @@ public class DriveStraight extends PIDCommand {
     // Use addRequirements() here to declare subsystem dependencies.
     // Configure additional PID options by calling `getController` here.
     addRequirements(driveBase);
-    SmartDashboard.putNumber("DriveStraightPID/kP",Constants.TurnPID.kP);
-    SmartDashboard.putNumber("DriveStraightPID/kI",Constants.TurnPID.kI);
-    SmartDashboard.putNumber("DriveStraightPID/kD",Constants.TurnPID.kD);
+    SmartDashboard.putNumber("DriveStraightPID/kP", Constants.TurnPID.kP);
+    SmartDashboard.putNumber("DriveStraightPID/kI", Constants.TurnPID.kI);
+    SmartDashboard.putNumber("DriveStraightPID/kD", Constants.TurnPID.kD);
     this.getController().setTolerance(0.5);
   }
 

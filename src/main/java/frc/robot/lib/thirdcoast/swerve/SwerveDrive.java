@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Units;
+
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -335,9 +337,21 @@ public class SwerveDrive {
 
   Translation2d xy = m_odometry.getPoseMeters().getTranslation() ;
 
-  SmartDashboard.putNumber("Distance X", xy.getX()); 
+  SmartDashboard.putNumber("Distance X", Units.metersToFeet(xy.getX()) * .9); 
 
-  SmartDashboard.putNumber("Distance Y", xy.getY()); 
+  SmartDashboard.putNumber("Distance Y", Units.metersToFeet(xy.getY()) * .9);  
+
+  //SmartDashboard.putNumber("Front Right Speed", Units.metersToFeet(wheels[0].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec)); 
+  SmartDashboard.putNumber("Front Right Angle", wheels[0].getState().angle.getDegrees()); 
+  //SmartDashboard.putNumber("Front Left Speed", Units.metersToFeet(wheels[1].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
+  SmartDashboard.putNumber("Front Left Angle", wheels[1].getState().angle.getDegrees()); 
+  //SmartDashboard.putNumber("Back Left Speed", Units.metersToFeet(wheels[2].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
+  SmartDashboard.putNumber("Back Left Angle", wheels[2].getState().angle.getDegrees()); 
+  //SmartDashboard.putNumber("Back Right Speed", Units.metersToFeet(wheels[3].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
+  SmartDashboard.putNumber("Back Right Angle", wheels[3].getState().angle.getDegrees()); 
+  
+
+
 } 
 
 public void setModuleStates(SwerveModuleState[] states){ 
@@ -356,6 +370,6 @@ public void resetOdometry(Pose2d pose){
 } 
 
 public Pose2d getPose(){ 
-  return m_odometry.getPoseMeters();
+  return m_odometry.getPoseMeters(); 
 }
 }

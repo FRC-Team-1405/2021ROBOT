@@ -13,15 +13,18 @@ import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase {
   TalonSRX master = new TalonSRX(Constants.shooterMaster);
-  TalonSRX slave = new TalonSRX(Constants.shooterSlave);
+  TalonSRX slave = new TalonSRX(Constants.shooterSlave); 
+
+  
   
   SlewRateLimiter rateLimit = new SlewRateLimiter(2500, 0); 
 
   int targetVelocity = 0;
 
-  public Shooter(){
-    slave.follow(master);
-  }
+  public Shooter(){    
+    slave.setInverted(true);
+    slave.follow(master); 
+}
 
   @Override
   public void periodic() {

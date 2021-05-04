@@ -11,8 +11,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 import java.util.logging.Logger;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -41,8 +43,10 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
+import frc.robot.subsystems.Hood;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.commands.DriveToBall;
 import frc.robot.commands.ShootConstantly;
@@ -51,13 +55,17 @@ import frc.robot.commands.TurnToBall;
 import frc.robot.commands.ZeroizeOdometry;
 import frc.robot.commands.ZeroizeSwerveModules;
 import frc.robot.lib.CustomPIDController;
+import frc.robot.lib.Interpolate;
 import frc.robot.lib.MathTools;
 import frc.robot.lib.SmartBooleanSupplier;
 import frc.robot.lib.SmartSupplier;
 import frc.robot.lib.thirdcoast.swerve.SwerveDrive.DriveMode;
+import frc.robot.sensors.LidarLitePWM;
 import frc.robot.sensors.Limelight;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SwerveDriveBase;
+import frc.robot.subsystems.SwerveIntake;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -72,13 +80,18 @@ public class RobotContainer {
   private static final Logger logger = Logger.getLogger(RobotContainer.class.getName());
 
   // private final ArcadeDrive driveBase = new ArcadeDrive();
-  public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase();
+  public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase(); 
+  public final SwerveIntake intake = new SwerveIntake(); 
   private Limelight limelight = new Limelight();
 
   private XboxController driver = new XboxController(Constants.pilot); 
   private XboxController operator = new XboxController(Constants.operator); 
+  private XboxController demoController = new XboxController(Constants.demoController);
   
-  private Shooter shooter = new Shooter();
+  private Shooter shooter = new Shooter(); 
+  private Hood hood = new Hood(); 
+  private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(9));
+
 
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
   public static double increase = 0; 
@@ -102,8 +115,10 @@ public class RobotContainer {
     swerveDriveBase.setDefaultCommand( new SwerveDrive( this::getForwardSwerve, 
     this::getStrafeSwerve, 
     isLogitech ? this::getYawSwerveLogitech : this::getYawSwerveXboxController, 
+    (() -> { return swerveDriveBase.getPose().getRotation().getDegrees() ; }),
     isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
     swerveDriveBase) ); 
+
 
 
 /*
@@ -114,7 +129,7 @@ public class RobotContainer {
                                                             this::getYawSwerveLogitech, 
                                                             this::getSpeedLimitLogitech,
                                                             swerveDriveBase) ); 
-        break;
+                                                            break;
       case "XboxController": 
       default:
         swerveDriveBase.setDefaultCommand( new SwerveDrive( this::getForwardSwerve, 
@@ -191,6 +206,10 @@ public class RobotContainer {
     autoSelector.addOption("Swerve Test Auto", 3); 
     autoSelector.addOption("Slalom", 4); 
     autoSelector.addOption("Waypoint Slalom", 5); 
+    autoSelector.addOption("Circle", 6); 
+    autoSelector.addOption("Search Path A Red", 7); 
+    autoSelector.addOption("Search Path B Red", 8); 
+    autoSelector.addOption("Bounce", 9);
     autoSelector.setDefaultOption("Do nothing", 0); 
     
     ShuffleboardTab autoTab = Shuffleboard.getTab("Auto") ;
@@ -294,13 +313,28 @@ public class RobotContainer {
     new JoystickButton(driver, XboxController.Button.kB.value) 
         .whenHeld(new SequentialCommandGroup(
                         new TurnToBall(swerveDriveBase, limelight, 0.1), 
-                        new DriveToBall(swerveDriveBase, limelight)));
+                        new DriveToBall(swerveDriveBase, limelight))); 
 
-    new JoystickButton(driver, XboxController.Button.kA.value)
-      .whenHeld(new ShootConstantly(shooter, 5000)); 
+    new JoystickButton(driver, XboxController.Button.kA.value).whenPressed(new InstantCommand(shooter::testShoot, shooter)).whenReleased(shooter::stop, shooter);                     
+
+    new JoystickButton(driver, XboxController.Button.kY.value).whenHeld(new ShootConstantly(shooter, hood, aimingLidar));                     
+
+    new JoystickButton(driver, XboxController.Button.kBumperLeft.value)
+      .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
+
+    new JoystickButton(driver, XboxController.Button.kBumperRight.value) 
+      .whenPressed(new InstantCommand(intake::intake, intake)) 
+      .whenReleased(new InstantCommand(intake::stop, intake));
+       
+    configureDemoController();
   };
 
-
+  private void configureDemoController(){
+    new JoystickButton(demoController, XboxController.Button.kY.value).whileHeld(new InstantCommand(() ->{
+      Interpolate distanceToAngle = new Interpolate("ToDo");
+      hood.setPosition( (int) distanceToAngle.CalculateOutput(aimingLidar.getDistance()));
+    }));                     
+  }
   // An example selector method for the selectcommand.  Returns the selector that will select
   // which command to run.  Can base this choice on logical conditions evaluated at runtime.
   
@@ -317,11 +351,15 @@ public class RobotContainer {
           // Maps selector values to commands
           Map.ofEntries(
               Map.entry(0, new PrintCommand("Do nothing")),
-              // Map.entry(1, auto1),
-              // Map.entry(2, auto2),
+              //Map.entry(1, auto1),
+              //Map.entry(2, auto2),
               Map.entry(3, getSwerveAutoTest()), 
               Map.entry(4, slalom()), 
-              Map.entry(5, waypointSlalom())
+              Map.entry(5, waypointSlalom()), 
+              Map.entry(6, Barrel()), 
+              Map.entry(7, galacticSearchPathARed()), 
+              Map.entry(8, galacticSearchPathBRed()), 
+              Map.entry(9, bounce()) 
           ),
           this::select
       );
@@ -369,17 +407,19 @@ SwerveControllerCommand swerveControllerCommand =
                             
         thetaController,
         swerveDriveBase::setModuleStates,
-        swerveDriveBase);
+        swerveDriveBase); 
 
-// Reset odometry to the starting pose of the trajectory.
-swerveDriveBase.resetOdometry(trajectory.getInitialPose());
 
 // Run path following command, then stop at the end.
 return new SequentialCommandGroup( 
   new InstantCommand(() -> {
+    // Reset odometry to the starting pose of the trajectory.
+    swerveDriveBase.resetOdometry(trajectory.getInitialPose());
+    // change the drive mode to Closed Loop
     swerveDriveBase.setDriveMode(DriveMode.CLOSED_LOOP);
   }), 
   swerveControllerCommand, 
+  
   new InstantCommand(() -> {
     swerveDriveBase.stop(); 
     swerveDriveBase.setDriveMode(DriveMode.OPEN_LOOP);
@@ -395,15 +435,15 @@ return new SequentialCommandGroup(
         // Add kinematics to ensure max speed is actually obeyed
         .setKinematics(swerveDriveBase.getKinematics());
 
-    // An example trajectory to follow. All units in meters.
+    //An example trajectory to follow. All units in meters.
     Trajectory exampleTrajectory =
         TrajectoryGenerator.generateTrajectory(
             // Start at the origin facing the +X direction
             new Pose2d(0, 0, new Rotation2d(0)),
             // Pass through these two interior waypoints, making an 's' curve path
-            List.of(new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0)), new Translation2d(Units.feetToMeters(11), Units.feetToMeters(0))),
+            List.of(new Translation2d(0, Units.feetToMeters(2 * Constants.VelocityConversions.ScaleFactor)), new Translation2d(0, Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor))),
             // End 3 meters straight ahead of where we started, facing forward
-            new Pose2d(Units.feetToMeters(15.0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0.0), new Rotation2d(180)),
+            new Pose2d(Units.feetToMeters(0), Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)),
             config);
 
     return runTrajecotory(exampleTrajectory); 
@@ -422,7 +462,24 @@ return new SequentialCommandGroup(
    } 
 
    return runTrajecotory(trajectory); 
-  } 
+  }  
+
+  private Command circle(){ 
+    TrajectoryConfig config = new TrajectoryConfig(
+      Constants.SwerveBase.maxSpeed,
+      Constants.SwerveBase.maxAcceleration)
+  // Add kinematics to ensure max speed is actually obeyed
+  .setKinematics(swerveDriveBase.getKinematics()); 
+
+  Trajectory circle = TrajectoryGenerator.generateTrajectory( new Pose2d(0, 0, new Rotation2d(0)), 
+  List.of(new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), 0 * Units.feetToMeters(Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor), 4 * Constants.VelocityConversions.ScaleFactor), 
+          new Translation2d(Units.feetToMeters(8 * Constants.VelocityConversions.ScaleFactor), 0 * Units.feetToMeters(Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(-4* Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(-4* Constants.VelocityConversions.ScaleFactor))), 
+          new Pose2d(0, 0, new Rotation2d(0)), config);  
+   
+
+  return runTrajecotory(circle); }
 
   private Command waypointSlalom(){ 
   // Create config for trajectory
@@ -441,20 +498,130 @@ return new SequentialCommandGroup(
           // Pass through these two interior waypoints, making an 's' curve path
           List.of(
           new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor), 0), 
-          new Translation2d(Units.feetToMeters(6 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(15 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(19 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(23 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0.0)), 
+          new Translation2d(Units.feetToMeters(6 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(15 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(19 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(21 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(-2)), 
           new Translation2d(Units.feetToMeters(26 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(23 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(19 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(15 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(6 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor))), 
-          new Pose2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)),
-          config);
-
+          new Translation2d(Units.feetToMeters(21 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(19 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(-2 * Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(15 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(-2 * Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(6 * Constants.VelocityConversions.ScaleFactor), 
+          Units.feetToMeters(-1 * Constants.VelocityConversions.ScaleFactor)), 
+          new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor))),   
+          new Pose2d(Units.feetToMeters(1 * Constants.VelocityConversions.ScaleFactor), 
+          Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)),
+          config); 
+ 
+           
   return runTrajecotory(trajectory); 
 
+
+  } 
+
+
+//Path A Red :)
+  private Command galacticSearchPathARed(){ 
+  TrajectoryConfig config =
+  new TrajectoryConfig(
+          Constants.SwerveBase.maxSpeed,
+          Constants.SwerveBase.maxAcceleration)
+      // Add kinematics to ensure max speed is actually obeyed 
+      .setKinematics(swerveDriveBase.getKinematics());
+  Trajectory trajectory = TrajectoryGenerator.generateTrajectory(new Pose2d(0, 0, new Rotation2d(0)), List.of(
+    new Translation2d(0, Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(2.5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(6 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(2.5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(8 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(-3 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(11 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(-2 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(15 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(20 * Constants.VelocityConversions.ScaleFactor))   
+    ), 
+    new Pose2d(0, Units.feetToMeters(25 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
+
+ return new SequentialCommandGroup(new InstantCommand(intake::intake, intake), 
+ runTrajecotory(trajectory), 
+ new InstantCommand(intake::stop, intake)); 
+//return runTrajecotory(trajectory); 
+} 
+
+//Path B Red :)
+private Command galacticSearchPathBRed(){ 
+  TrajectoryConfig config =
+  new TrajectoryConfig(
+          Constants.SwerveBase.maxSpeed,
+          Constants.SwerveBase.maxAcceleration)
+      // Add kinematics to ensure max speed is actually obeyed 
+      .setKinematics(swerveDriveBase.getKinematics());
+  Trajectory trajectory = TrajectoryGenerator.generateTrajectory(new Pose2d(0, 0, new Rotation2d(0)), List.of(
+    new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(6 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(8 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(10 * Constants.VelocityConversions.ScaleFactor)), 
+    new Translation2d(Units.feetToMeters(-1 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(15 * Constants.VelocityConversions.ScaleFactor)),
+    new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(20 * Constants.VelocityConversions.ScaleFactor))   
+    ), 
+    new Pose2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(25 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
+
+ return new SequentialCommandGroup(new InstantCommand(intake::intake, intake), 
+ runTrajecotory(trajectory), 
+ new InstantCommand(intake::stop, intake)); 
+//return runTrajecotory(trajectory); 
+} 
+
+private Command bounce(){ 
+  
+    TrajectoryConfig config =
+    new TrajectoryConfig(
+            Constants.SwerveBase.maxSpeed,
+            Constants.SwerveBase.maxAcceleration)
+        // Add kinematics to ensure max speed is actually obeyed 
+        .setKinematics(swerveDriveBase.getKinematics());
+    Trajectory trajectory = TrajectoryGenerator.generateTrajectory(new Pose2d(0, 0, new Rotation2d(0)), List.of(
+      new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(-3.5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(3 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(7 * Constants.VelocityConversions.ScaleFactor)), 
+      //new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor)), 
+      //new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor)),
+      new Translation2d(Units.feetToMeters(4.5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(11.5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(-3 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(11.5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(4.5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(12.5 * Constants.VelocityConversions.ScaleFactor)),  
+      new Translation2d(Units.feetToMeters(4.5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(19.5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(-3 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(19.5 * Constants.VelocityConversions.ScaleFactor)),
+      new Translation2d(Units.feetToMeters(2 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(19.5 * Constants.VelocityConversions.ScaleFactor)),  
+      new Translation2d(Units.feetToMeters(2 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(21 * Constants.VelocityConversions.ScaleFactor)) 
+      ), 
+      new Pose2d(Units.feetToMeters(2 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(23 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
+return runTrajecotory(trajectory); 
+
+  } 
+
+  public Command Barrel(){  
+    TrajectoryConfig config =
+    new TrajectoryConfig(
+            Constants.SwerveBase.maxSpeed,
+            Constants.SwerveBase.maxAcceleration)
+        // Add kinematics to ensure max speed is actually obeyed 
+        .setKinematics(swerveDriveBase.getKinematics());
+    Trajectory trajectory = TrajectoryGenerator.generateTrajectory(new Pose2d(0, 0, new Rotation2d(0)), List.of(
+      new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(11 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(11 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(5 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(10 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(-1.5 * Constants.VelocityConversions.ScaleFactor)),
+      new Translation2d(Units.feetToMeters(17 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-1.5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(17 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(2.5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(12 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(2.5 * Constants.VelocityConversions.ScaleFactor)),  
+      new Translation2d(Units.feetToMeters(15 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(24 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-6 * Constants.VelocityConversions.ScaleFactor)),
+      new Translation2d(Units.feetToMeters(24 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-6 * Constants.VelocityConversions.ScaleFactor)),  
+      new Translation2d(Units.feetToMeters(24 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-5 * Constants.VelocityConversions.ScaleFactor)), 
+      new Translation2d(Units.feetToMeters(24 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-1.5 * Constants.VelocityConversions.ScaleFactor)),    
+      new Translation2d(Units.feetToMeters(10 * Constants.VelocityConversions.ScaleFactor ), Units.feetToMeters(-1.5 * Constants.VelocityConversions.ScaleFactor)) 
+      ), 
+      new Pose2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
+return runTrajecotory(trajectory);
 
   }
 }

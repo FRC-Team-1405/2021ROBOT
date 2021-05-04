@@ -10,6 +10,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.util.Objects;
 import java.util.function.DoubleConsumer;
@@ -209,15 +210,12 @@ public class Wheel {
 
   public double getAzimuthRadians() {
     double position = azimuthTalon.getSelectedSensorPosition() ;
-    if (isInverted()){
-      position -= Math.copySign(0.5 * TICKS, position) ;
-    }
     double azimuth = Math.IEEEremainder( position, TICKS);
     return (double)azimuth/4096.0 * 2.0 * Math.PI; 
   }
 
   public double getMetersPerSecond() {
-    return Math.abs(driveTalon.getSelectedSensorVelocity() * Constants.VelocityConversions.SwerveSensorVelocityToMetersPerSecond) ;
+    return driveTalon.getSelectedSensorVelocity() * Constants.VelocityConversions.SwerveSensorVelocityToMetersPerSecond ;
   }
 
   public SwerveModuleState getState(){ 
@@ -225,8 +223,24 @@ public class Wheel {
   }
   
   public void setState(SwerveModuleState state){
-    double angle = MathTools.map(state.angle.getRadians(), 0, 2 * Math.PI, 0, 4096);
+    double angle = MathTools.map(state.angle.getRadians(), 0, 2 * Math.PI, 0, 4095); 
     double speed = state.speedMetersPerSecond * Constants.VelocityConversions.SwerveMetersPerSecondToSensorVelocity;   
+    
+    isInverted = Math.abs(angle) > 0.25 * TICKS;
+    if (isInverted) {
+      angle -= Math.copySign(0.5 * TICKS, angle);
+      speed = -speed;
+    }
+    // if(angle >= 2048){ 
+    //   angle = angle - 4095; 
+    //   } 
+      
+    // if(angle <= -2048){ 
+    //   angle = angle + 4095;
+    // }
+      SmartDashboard.putNumber("Commanded Angle", angle); 
+
+    
 
     azimuthTalon.set(MotionMagic, angle);
     driver.accept(speed);

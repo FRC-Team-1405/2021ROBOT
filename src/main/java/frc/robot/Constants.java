@@ -39,14 +39,14 @@ public final class Constants {
         public final static Translation2d backLeftLocation = new Translation2d(-0.330, -0.279);
         public final static Translation2d backRightLocation = new Translation2d(-0.330, 0.279); 
 
-        public final static double maxAcceleration = 0.1; 
+        public final static double maxAcceleration = 1; 
         public final static double maxSpeed = 1;  
         public final static double maxAngularAccelerartion = Math.PI; 
         public final static double maxAngularSpeed = Math.PI;  
     }
 
     public static class Hood {
-        public final static int maxError = 10;
+        public final static int maxError = 100;
     }
 
     public final static int intakeTalon = 5;
@@ -80,6 +80,7 @@ public final class Constants {
 
     public final static int pilot = 0;
     public final static int operator = 1; 
+    public final static int demoController = 5;
 
     public final static int lidarBufferSize = 20;
 

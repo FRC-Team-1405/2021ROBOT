@@ -4,47 +4,39 @@
 
 package frc.robot.subsystems;
 
+import java.util.function.IntSupplier;
+
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-
-import edu.wpi.first.wpilibj.Preferences;
-import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Hood extends SubsystemBase {
-  /** Creates a new Hood. */  
-  private int zeroAngle; 
+  /** Creates a new Hood. */
   private int targetAngle;
 
-  WPI_TalonSRX angle = new WPI_TalonSRX(Constants.shooterAngle); 
-  private static final String PREF_KEY = "Hood Zero";
+  WPI_TalonSRX angle = new WPI_TalonSRX(Constants.shooterAngle);
 
-  public Hood() { 
-    zeroAngle = Preferences.getInstance().getInt(PREF_KEY, 0);
+  public Hood() {
+    stop();
   }
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run 
-  } 
+  public void stop(){
+    angle.set(ControlMode.PercentOutput, 0);
+    targetAngle = getPosition();
+  }
 
   public void setPosition(int position) {
-    targetAngle = position + zeroAngle;
+    targetAngle = position;
     angle.set(ControlMode.MotionMagic, targetAngle);
   };
 
   public int getPosition() {
     int position = angle.getSensorCollection().getPulseWidthPosition(); 
-    return position - zeroAngle;
+    return position;
   };
 
   public boolean isReady(){
     return Math.abs(getPosition() - targetAngle) < Constants.Hood.maxError;
-  }
-
-  public void zeroize(){ 
-    zeroAngle = angle.getSensorCollection().getPulseWidthPosition(); 
-    Preferences.getInstance().putInt(PREF_KEY, zeroAngle);
   }
 }

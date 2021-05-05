@@ -49,6 +49,7 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.subsystems.Hood;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.commands.DriveToBall;
+import frc.robot.commands.PrepareShooter;
 import frc.robot.commands.ShootConstantly;
 import frc.robot.commands.SwerveDrive;
 import frc.robot.commands.TurnToBall;
@@ -112,6 +113,8 @@ public class RobotContainer {
 
     boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
 
+    
+
     swerveDriveBase.setDefaultCommand( new SwerveDrive( this::getForwardSwerve, 
     this::getStrafeSwerve, 
     isLogitech ? this::getYawSwerveLogitech : this::getYawSwerveXboxController, 
@@ -120,7 +123,7 @@ public class RobotContainer {
     swerveDriveBase) ); 
 
 
-
+    
 /*
     switch(joystickSelector.getSelected()){
       case "Logitech":
@@ -317,7 +320,7 @@ public class RobotContainer {
 
     new JoystickButton(driver, XboxController.Button.kA.value).whenPressed(new InstantCommand(shooter::testShoot, shooter)).whenReleased(shooter::stop, shooter);                     
 
-    new JoystickButton(driver, XboxController.Button.kY.value).whenHeld(new ShootConstantly(shooter, hood, aimingLidar));                     
+    //new JoystickButton(driver, XboxController.Button.kY.value).whenHeld(new ShootConstantly(shooter, hood, aimingLidar));                     
 
     new JoystickButton(driver, XboxController.Button.kBumperLeft.value)
       .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
@@ -329,12 +332,26 @@ public class RobotContainer {
     configureDemoController();
   };
 
-  private void configureDemoController(){
+  private void configureDemoController(){ 
+
+    SmartDashboard.putNumber("shooter speed", 0.0); 
+    SmartDashboard.putNumber("shooter angle", 0.0);
+
     new JoystickButton(demoController, XboxController.Button.kY.value).whileHeld(new InstantCommand(() ->{
       Interpolate distanceToAngle = new Interpolate("ToDo");
       hood.setPosition( (int) distanceToAngle.CalculateOutput(aimingLidar.getDistance()));
-    }));                     
-  }
+    })); 
+    
+    new JoystickButton(demoController, XboxController.Button.kA.value)
+            .whileHeld( new PrepareShooter( shooter, 
+                                            hood, 
+                                            () -> { return SmartDashboard.getNumber("shooter speed", 0.0);}, 
+                                            () -> { return SmartDashboard.getNumber("shooter angle", 0.0);},
+                                            () -> { return aimingLidar.getDistance();}
+                                            )); 
+  } 
+
+
   // An example selector method for the selectcommand.  Returns the selector that will select
   // which command to run.  Can base this choice on logical conditions evaluated at runtime.
   

@@ -35,7 +35,8 @@ public class Shooter extends SubsystemBase {
     slave.follow(master);  
 
     SmartDashboard.putNumber("Servo Test Value", 0); 
-    SmartDashboard.putNumber("Shooter Test Value", 0);
+    SmartDashboard.putNumber("Shooter Test Value", 0); 
+    
 
     close();
     

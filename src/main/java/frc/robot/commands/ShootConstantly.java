@@ -22,14 +22,14 @@ public class ShootConstantly extends CommandBase {
   private Hood hood; 
   private SwerveDriveBase driveBase; 
   public Limelight camera = new Limelight();  
-  private LidarLitePWM aimingLidar;
+  //private LidarLitePWM aimingLidar;
 
   private Interpolate distanceToAngle = new Interpolate("ToDo");
 
-  public ShootConstantly(Shooter shooter, Hood hood, LidarLitePWM aimingLidar) {
+  public ShootConstantly(Shooter shooter, Hood hood) {
     this.shooter = shooter; 
     this.hood = hood;
-    this.aimingLidar = aimingLidar;
+    //this.aimingLidar = aimingLidar;
     addRequirements(shooter);
     addRequirements(hood);
   }
@@ -40,7 +40,7 @@ public class ShootConstantly extends CommandBase {
   
   @Override
   public void execute(){ 
-    double distance = aimingLidar.getDistance();
+    double distance = 0; //aimingLidar.getDistance();
     double velocity = DistanceToPower.calculatePower(distance);
     double angle = distanceToAngle.CalculateOutput(distance);
     SmartDashboard.putNumber("Shooter/Distance", distance);

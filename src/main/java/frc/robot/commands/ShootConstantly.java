@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.lib.DistanceToPower;
-import frc.robot.lib.Interpolate;
+import frc.robot.lib.DistanceToAngle;
 import frc.robot.sensors.LidarLitePWM;
 import frc.robot.sensors.Limelight;
 import frc.robot.subsystems.Hood;
@@ -23,8 +23,6 @@ public class ShootConstantly extends CommandBase {
   private SwerveDriveBase driveBase; 
   public Limelight camera = new Limelight();  
   //private LidarLitePWM aimingLidar;
-
-  private Interpolate distanceToAngle = new Interpolate("ToDo");
 
   public ShootConstantly(Shooter shooter, Hood hood) {
     this.shooter = shooter; 
@@ -41,8 +39,8 @@ public class ShootConstantly extends CommandBase {
   @Override
   public void execute(){ 
     double distance = 0; //aimingLidar.getDistance();
-    double velocity = DistanceToPower.calculatePower(distance);
-    double angle = distanceToAngle.CalculateOutput(distance);
+    double velocity = DistanceToPower.calculate(distance);
+    double angle = DistanceToAngle.calculate(distance);
     SmartDashboard.putNumber("Shooter/Distance", distance);
     SmartDashboard.putNumber("Shooter/Velocity", velocity);
     SmartDashboard.putNumber("Shooter/Angle", angle);

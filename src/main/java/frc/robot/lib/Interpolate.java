@@ -1,10 +1,8 @@
 package frc.robot.lib;
 
-import edu.wpi.first.wpilibj.util.Units;
-
 public class Interpolate { 
 
-    private static class Point {
+    public static class Point {
         public final double input; 
         public final double output; 
 
@@ -20,16 +18,7 @@ public class Interpolate {
         this.points = points;
     }
 
-    public Interpolate(String importFile){
-        // ToDo load json file
-        this.points = new Point[] { new Point(Units.feetToMeters(0) *100.0, 10000),
-                                    new Point(Units.feetToMeters(10)*100.0, 180000),
-                                    new Point(Units.feetToMeters(20)*100.0, 350000)
-                                };
-
-    }
-
-    public  double CalculateOutput(double input){
+    public  double calculate(double input){
         int lowIndex = 0;
         int highIndex = 0;
         double output = 0.0;
@@ -46,7 +35,7 @@ public class Interpolate {
             if(input <= points[i].output){
               lowIndex = i-1;
               highIndex = i;
-              output = Calculate(input, points[lowIndex], points[highIndex]);
+              output = calculatePoint(input, points[lowIndex], points[highIndex]);
               break;
             }
           }
@@ -54,7 +43,7 @@ public class Interpolate {
       return output;
     }
 
-    private static double Calculate(double input, Point low, Point high){ 
+    private static double calculatePoint(double input, Point low, Point high){ 
       //From slope point formula (y-y_1) = m(x-x_1) -> y = m(x-x_1) + y_1
       double output = (((high.output - low.output) / (high.input - low.input)) * (input - low.input) + low.output);
       return output;

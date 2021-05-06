@@ -56,6 +56,7 @@ import frc.robot.commands.TurnToBall;
 import frc.robot.commands.ZeroizeOdometry;
 import frc.robot.commands.ZeroizeSwerveModules;
 import frc.robot.lib.CustomPIDController;
+import frc.robot.lib.DistanceToAngle;
 import frc.robot.lib.Interpolate;
 import frc.robot.lib.MathTools;
 import frc.robot.lib.SmartBooleanSupplier;
@@ -338,8 +339,7 @@ public class RobotContainer {
     SmartDashboard.putNumber("shooter angle", 0.0);
 
     new JoystickButton(demoController, XboxController.Button.kY.value).whileHeld(new InstantCommand(() ->{
-      Interpolate distanceToAngle = new Interpolate("ToDo");
-      hood.setPosition( (int) distanceToAngle.CalculateOutput(aimingLidar.getDistance()));
+      hood.setPosition( (int) DistanceToAngle.calculate(aimingLidar.getDistance()));
     })); 
     
     new JoystickButton(demoController, XboxController.Button.kA.value)

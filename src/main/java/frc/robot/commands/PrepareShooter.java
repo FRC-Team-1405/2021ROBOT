@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
@@ -18,7 +19,7 @@ public class PrepareShooter extends CommandBase {
   public DoubleSupplier distance; 
   public boolean isPrepared; 
 
-
+  
   /** Creates a new PrepareShooter. */ 
   public PrepareShooter(Shooter shooter, Hood hood, DoubleSupplier speed, DoubleSupplier angle, DoubleSupplier distance) {
     // Use addRequirements() here to declare subsystem dependencies. 
@@ -34,17 +35,25 @@ public class PrepareShooter extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    SmartDashboard.putNumber("shooter distance", distance.getAsDouble());
     shooter.setVelocity((int) speed.getAsDouble()); 
     hood.setPosition((int) angle.getAsDouble());
-
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() { 
-    isPrepared = shooter.isAtVelocity() && hood.isReady(); 
+    SmartDashboard.putNumber("shooter distance", distance.getAsDouble());
+    
+    boolean shooterReady = shooter.isAtVelocity();
+    boolean hoodReady = hood.isReady();
 
-    if(isPrepared = true){ 
+    SmartDashboard.putBoolean("shooter VelocitySet", shooterReady);
+    SmartDashboard.putBoolean("shooter HoodSet", hoodReady);
+
+    isPrepared = shooterReady && hoodReady; 
+
+    if(isPrepared == true){ 
       shooter.index();
     }else{ 
       shooter.close();
@@ -53,11 +62,14 @@ public class PrepareShooter extends CommandBase {
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    shooter.stop();
+    shooter.close();
+  }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return isPrepared;
+    return false;
   }
 }

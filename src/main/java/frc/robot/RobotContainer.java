@@ -57,6 +57,7 @@ import frc.robot.commands.ZeroizeOdometry;
 import frc.robot.commands.ZeroizeSwerveModules;
 import frc.robot.lib.CustomPIDController;
 import frc.robot.lib.DistanceToAngle;
+import frc.robot.lib.DistanceToPower;
 import frc.robot.lib.Interpolate;
 import frc.robot.lib.MathTools;
 import frc.robot.lib.SmartBooleanSupplier;
@@ -92,7 +93,7 @@ public class RobotContainer {
   
   private Shooter shooter = new Shooter(); 
   private Hood hood = new Hood(); 
-  private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(9));
+  private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(8));
 
 
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
@@ -123,8 +124,6 @@ public class RobotContainer {
     isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
     swerveDriveBase) ); 
 
-
-    
 /*
     switch(joystickSelector.getSelected()){
       case "Logitech":
@@ -146,6 +145,7 @@ public class RobotContainer {
     swerveDriveBase.stop();
     swerveDriveBase.zeroAzimuthEncoders();
     swerveDriveBase.zeroGyro();
+    hood.zeroize();
 
   }
 
@@ -231,6 +231,12 @@ public class RobotContainer {
       //                 .andThen(new InstantCommand( () -> {launcher.stopFlywheels(); launcher.stopIndexer();}) )); 
       testCommandsTab.add(new ZeroizeSwerveModules(swerveDriveBase)); 
       testCommandsTab.add(new ZeroizeOdometry(swerveDriveBase));
+      testCommandsTab.add( new InstantCommand(() -> 
+      {
+        if (!hood.zeroizeComplete()) {
+          hood.zeroizeComplete();
+        }
+      }, hood));
       // testCommandsTab.add( new DriveByVelocity(driveBase));
 
       // RunCommand readDistance = new RunCommand(lidar::readDistance);
@@ -337,13 +343,15 @@ public class RobotContainer {
 
     SmartDashboard.putNumber("shooter speed", 0.0); 
     SmartDashboard.putNumber("shooter angle", 0.0);
+    SmartDashboard.putNumber("shooter distance", 0.0);
 
-    new JoystickButton(demoController, XboxController.Button.kY.value).whileHeld(new InstantCommand(() ->{
-      hood.setPosition( (int) DistanceToAngle.calculate(aimingLidar.getDistance()));
-    })); 
+    new JoystickButton(demoController, XboxController.Button.kY.value)
+            .whileHeld(new InstantCommand(() ->{
+                              hood.setPosition( (int) DistanceToAngle.calculate(aimingLidar.getDistance()));
+                            })); 
     
     new JoystickButton(demoController, XboxController.Button.kA.value)
-            .whileHeld( new PrepareShooter( shooter, 
+            .whileHeld( new PrepareShooter(  shooter, 
                                             hood, 
                                             () -> { return SmartDashboard.getNumber("shooter speed", 0.0);}, 
                                             () -> { return SmartDashboard.getNumber("shooter angle", 0.0);},

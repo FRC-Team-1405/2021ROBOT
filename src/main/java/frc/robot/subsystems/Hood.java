@@ -15,10 +15,35 @@ public class Hood extends SubsystemBase {
   /** Creates a new Hood. */
   private int targetAngle;
 
-  WPI_TalonSRX angle = new WPI_TalonSRX(Constants.shooterAngle);
+  private WPI_TalonSRX angle = new WPI_TalonSRX(Constants.shooterAngle);
+  private static final double ZEROIZE_SPEED = -0.4;
 
   public Hood() {
     stop();
+  }
+
+  @Override
+  public void periodic() {
+    if (zeroizeActive) {
+      if (angle.isRevLimitSwitchClosed() == 1){
+        angle.set(ControlMode.PercentOutput, 0);
+        zeroizeActive = false;
+        zeroizeComplete = true;
+      }
+    }
+  }
+
+  private boolean zeroizeActive = false;
+  private boolean zeroizeComplete = false;
+  public void zeroize(){
+    if (!zeroizeActive){
+      zeroizeActive = true;
+      angle.set(ControlMode.PercentOutput, ZEROIZE_SPEED);
+    }
+  }
+
+  public boolean zeroizeComplete(){
+    return zeroizeComplete;
   }
 
   public void stop(){
@@ -32,7 +57,7 @@ public class Hood extends SubsystemBase {
   };
 
   public int getPosition() {
-    int position = angle.getSensorCollection().getPulseWidthPosition(); 
+    int position = angle.getSelectedSensorPosition(); 
     return position;
   };
 

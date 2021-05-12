@@ -19,14 +19,13 @@ import frc.robot.sensors.LidarLitePWM;
 
 public class Shooter extends SubsystemBase {
   TalonSRX master = new TalonSRX(Constants.shooterMaster);
-  
-  WPI_TalonFX slave = new WPI_TalonFX(Constants.shooterSlave); 
+  TalonSRX slave = new TalonSRX(Constants.shooterSlave); 
   
   
 
   Servo trigger = new Servo(0); 
   
-  SlewRateLimiter rateLimit = new SlewRateLimiter(2500, 0); 
+  SlewRateLimiter rateLimit = new SlewRateLimiter(10000, 0); 
 
   int targetVelocity = 0;
 
@@ -45,7 +44,7 @@ public class Shooter extends SubsystemBase {
   @Override
   public void periodic() {
     int newVelocity = (int)rateLimit.calculate(targetVelocity);
-    if(targetVelocity != newVelocity)
+    if((int)master.getClosedLoopTarget() != newVelocity)
       master.set(ControlMode.Velocity, newVelocity); 
     //trigger.set(SmartDashboard.getNumber("Servo Test Value", 0)); 
     //Aiming lidar returns in cms so we make it feet cuz this isn't Europe or really anywhere but the US :shrug:
@@ -57,8 +56,11 @@ public class Shooter extends SubsystemBase {
     master.set(ControlMode.Velocity, rateLimit.calculate(velocity));
   }
 
+  public int getVelocity(){
+    return (int)master.getClosedLoopTarget() - master.getClosedLoopError();
+  }
   public boolean isAtVelocity(){
-    return master.getClosedLoopError() <= Constants.ShooterConstants.acceptableError;
+    return master.getClosedLoopTarget() == targetVelocity && Math.abs(master.getClosedLoopError()) <= Constants.ShooterConstants.acceptableError;
   }
 
   public void stop(){

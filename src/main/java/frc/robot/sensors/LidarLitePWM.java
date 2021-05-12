@@ -21,7 +21,8 @@ public class LidarLitePWM {
     private static final int CALIBRATION_OFFSET = 0;
 
     private Counter counter;
-    private int printedWarningCount = 5;
+    private static final int PRINT_WARNING = 20;
+    private int printedWarningCount = 0;
     private MeanFilter filter = new MeanFilter(Constants.lidarBufferSize);
 
     /**
@@ -35,7 +36,6 @@ public class LidarLitePWM {
         // Configure for measuring rising to falling pulses
         counter.setSemiPeriodMode(true);
         counter.reset(); 
-        
     }
 
     /**
@@ -49,7 +49,7 @@ public class LidarLitePWM {
         * This happens when there is no LIDAR-Lite plugged in, btw.
         */
         if (counter.get() < 1) {
-            if (printedWarningCount-- > 0) {
+            if ((printedWarningCount++)%PRINT_WARNING == 0) {
                 System.out.println("LidarLitePWM: waiting for distance measurement");
             }
             return 0;

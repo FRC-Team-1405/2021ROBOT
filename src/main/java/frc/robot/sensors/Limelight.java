@@ -25,6 +25,26 @@ import edu.wpi.first.networktables.NetworkTableInstance;
        private NetworkTableEntry getCamMode;
        private NetworkTableEntry tcornxy;
 
+       public class Position {
+           private final double height;
+           private final double angle;
+
+           public Position(double height, double angle) {
+               this.height = height;
+               this.angle = angle;
+           }
+
+           public double getHeight(){
+               return height;
+           }
+
+           public double getAngle(){
+               return angle;
+           }
+       }
+
+       private Position cameraPosition;
+
        //public byte pipeline;
        /* public enum pipe {
        PIPE1, PIPE2, PIPE3, PIPE4, PIPE5,
@@ -33,10 +53,19 @@ import edu.wpi.first.networktables.NetworkTableInstance;
        We only need ints for this (I'm using chars for the 
    byte's memory savings)*/
         public Limelight() {
-            this("");
+            this("", null);
+        }
+
+        public Limelight(Position cameraPosition){
+            this("", cameraPosition);
         }
 
         public Limelight(String name) {
+            this(name, null);
+        }
+
+        public Limelight(String name, Position cameraPosition) {
+        this.cameraPosition = cameraPosition;
         if(name.isBlank()){
             table = NetworkTableInstance.getDefault().getTable("limelight");
         } else {
@@ -145,20 +174,16 @@ import edu.wpi.first.networktables.NetworkTableInstance;
                 return getTX();
             return (points[1] + (points[3]-points[1])/2.0);
     }
-       /* public double fixedAngleDist(double h1, double h2,
-                    double a1) {
-       
-        TODO: finish this
-          If the camera never changes its angle, 
-          we know its height and the
-          target's height, we can very accurately 
-          calculate the X distance
-          to said object
-          
-          double h1: Our height
-          double h2: Target height
-          double a1: Our mounting angle
-          We can figure out the angle to the target using 
-          the camera 	   
-          } */
+
+    public double fixedAngleDist(double targetHeight) {
+        if (cameraPosition == null){
+            return Integer.MIN_VALUE;
+        }
+
+        if (!this.hasTarget()){
+            return Integer.MIN_VALUE;
+        }
+
+        return (targetHeight-cameraPosition.getHeight()) / Math.tan(this.getTY()+cameraPosition.getAngle()) ;
+    }
    }

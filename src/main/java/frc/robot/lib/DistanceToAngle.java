@@ -4,9 +4,12 @@ import edu.wpi.first.wpilibj.util.Units;
 
 public class DistanceToAngle {
     private static Interpolate table = new Interpolate( new Interpolate.Point[] {
-        new Interpolate.Point(Units.feetToMeters(0) *100.0, 10000),
-        new Interpolate.Point(Units.feetToMeters(10)*100.0, 180000),
-        new Interpolate.Point(Units.feetToMeters(20)*100.0, 350000)
+        new Interpolate.Point(75.8, 0),
+        new Interpolate.Point(153.0, 85000),
+        new Interpolate.Point(261.0, 155000), 
+        new Interpolate.Point(411.1, 200000), 
+        new Interpolate.Point(562.7, 225000), 
+        new Interpolate.Point(722.3, 250000)
       });
   
       /**

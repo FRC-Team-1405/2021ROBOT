@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
+import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -39,7 +40,9 @@ import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -48,6 +51,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.subsystems.Hood;
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.commands.DriveByAngle;
 import frc.robot.commands.DriveToBall;
 import frc.robot.commands.PrepareShooter;
 import frc.robot.commands.ShootConstantly;
@@ -222,7 +226,13 @@ public class RobotContainer {
     SmartDashboard.putNumber("Auto/Selected_Auto", 1);
     autoTab.add("Auto/Initial_Delay", 0); 
 
-
+    InstantCommand setPosition;
+    setPosition = new InstantCommand(() -> {
+                          double distanceMeters = aimingLidar.getDistance()/100.0;
+                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters, 0.0, swerveDriveBase.getPose().getRotation()) );
+                        }) ;
+    setPosition.setName("Center Position");
+    autoTab.add( setPosition );
   
     if(!Robot.fmsAttached){
       ShuffleboardTab testCommandsTab = Shuffleboard.getTab("Test Commands"); 
@@ -344,21 +354,70 @@ public class RobotContainer {
     SmartDashboard.putNumber("shooter speed", 0.0); 
     SmartDashboard.putNumber("shooter angle", 0.0);
     SmartDashboard.putNumber("shooter distance", 0.0);
+    DoubleSupplier angle = () -> { return swerveDriveBase.getPose().getRotation().getDegrees(); } ;
 
     new JoystickButton(demoController, XboxController.Button.kY.value)
             .whileHeld(new InstantCommand(() ->{
-                              hood.setPosition( (int) DistanceToAngle.calculate(aimingLidar.getDistance()));
+                              hood.setPosition( (int) DistanceToAngle.calculate(distanceToTarget()));
                             })); 
     
     new JoystickButton(demoController, XboxController.Button.kA.value)
             .whileHeld( new PrepareShooter(  shooter, 
                                             hood, 
-                                            () -> { return SmartDashboard.getNumber("shooter speed", 0.0);}, 
-                                            () -> { return SmartDashboard.getNumber("shooter angle", 0.0);},
-                                            () -> { return aimingLidar.getDistance();}
+                                            () -> { return DistanceToPower.calculate(distanceToTarget());}, 
+                                            () -> { return DistanceToAngle.calculate(distanceToTarget());}
                                             )); 
+
+    new JoystickButton(demoController, XboxController.Button.kX.value)
+            .whileHeld( new ParallelCommandGroup( 
+              new PrepareShooter( shooter, 
+                                            hood, 
+                                            () -> { return SmartDashboard.getNumber("shooter speed", 0.0);}, 
+                                            () -> { return SmartDashboard.getNumber("shooter angle", 0.0);}
+                                            ),
+              new RunCommand(() -> { SmartDashboard.putNumber("shooter distance", aimingLidar.getDistance()); })
+              )); 
+
+    new JoystickButton(demoController, XboxController.Button.kB.value)
+          // .whileHeld( new DriveByAngle( this::getForwardSwerve, this::getStrafeSwerve, this::angleToTarget, swerveDriveBase) );
+          .whileHeld( new RunCommand( () -> { 
+            SmartDashboard.putNumber("Target Angle", angleToTarget());
+            SmartDashboard.putNumber("Target Distance", distanceToTarget());
+           }));
   } 
 
+  private double angleToTarget(){
+    Pose2d robotPosition = swerveDriveBase.getPose() ;
+    double robotAngle = robotPosition.getRotation().getDegrees(); 
+
+    // TODO: Verify TargetPipeline
+    // TODO: Verify Limelight Angle Direction
+    if (limelight.getPipeline() == 7 && limelight.hasTarget()) {
+      return limelight.getTA();  
+    } else {
+      return robotPosition.getX() == 0.0 
+        ? 0.0
+        : robotAngle - Math.toDegrees( Math.atan( robotPosition.getY() / robotPosition.getX() )) ;
+    }
+  }
+
+  private double distanceToTarget(){
+    // TODO Verify Limelight target pipeline
+    // TODO Verify Target height in cm
+    double odometryDistance = Math.sqrt( Math.pow(swerveDriveBase.getPose().getX(), 2) + Math.pow(swerveDriveBase.getPose().getY(), 2) ) * 100.0;
+    double lidarDistance = aimingLidar.getDistance();
+    double limelightDistance = limelight.getPipeline() == 7 ? limelight.fixedAngleDist(800.0) : Integer.MIN_VALUE;
+
+    if ( Math.abs(odometryDistance - lidarDistance) > 100.0){
+      lidarDistance = Integer.MIN_VALUE; // assume an object is blocking the lidar
+    }
+
+    if (lidarDistance > 0)      return lidarDistance;
+    if (limelightDistance > 0)  return limelightDistance;
+    if (odometryDistance > 0)   return odometryDistance;
+
+    return Integer.MIN_VALUE; 
+  }
 
   // An example selector method for the selectcommand.  Returns the selector that will select
   // which command to run.  Can base this choice on logical conditions evaluated at runtime.

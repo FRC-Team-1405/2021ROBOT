@@ -21,13 +21,12 @@ public class PrepareShooter extends CommandBase {
 
   
   /** Creates a new PrepareShooter. */ 
-  public PrepareShooter(Shooter shooter, Hood hood, DoubleSupplier speed, DoubleSupplier angle, DoubleSupplier distance) {
+  public PrepareShooter(Shooter shooter, Hood hood, DoubleSupplier speed, DoubleSupplier angle) {
     // Use addRequirements() here to declare subsystem dependencies. 
     this.shooter = shooter; 
     this.hood = hood; 
     this.speed = speed; 
     this.angle = angle; 
-    this.distance = distance; 
 
     this.addRequirements(shooter, hood);
   }
@@ -35,7 +34,6 @@ public class PrepareShooter extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    SmartDashboard.putNumber("shooter distance", distance.getAsDouble());
     shooter.setVelocity((int) speed.getAsDouble()); 
     hood.setPosition((int) angle.getAsDouble());
   }
@@ -43,8 +41,7 @@ public class PrepareShooter extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() { 
-    SmartDashboard.putNumber("shooter distance", distance.getAsDouble());
-    
+
     boolean shooterReady = shooter.isAtVelocity();
     boolean hoodReady = hood.isReady();
 

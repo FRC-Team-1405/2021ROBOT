@@ -8,25 +8,30 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.Constants;
+import frc.robot.sensors.Limelight;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
 
-public class PrepareShooter extends CommandBase { 
-  public Shooter shooter; 
-  public Hood hood; 
-  public DoubleSupplier speed; 
-  public DoubleSupplier angle; 
-  public DoubleSupplier distance; 
-  public boolean isPrepared; 
+public class ShootContinous extends CommandBase { 
+  private Shooter shooter; 
+  private Hood hood; 
+  private DoubleSupplier speed; 
+  private DoubleSupplier angle; 
+  private Limelight limelight;
+  private boolean isPrepared; 
+  private boolean recalculate;
 
   
   /** Creates a new PrepareShooter. */ 
-  public PrepareShooter(Shooter shooter, Hood hood, DoubleSupplier speed, DoubleSupplier angle) {
+  public ShootContinous(Shooter shooter, Hood hood, DoubleSupplier speed, DoubleSupplier angle, Limelight limelight, boolean recalculate) {
     // Use addRequirements() here to declare subsystem dependencies. 
     this.shooter = shooter; 
     this.hood = hood; 
     this.speed = speed; 
     this.angle = angle; 
+    this.limelight = limelight;
+    this.recalculate = recalculate;
 
     this.addRequirements(shooter, hood);
   }
@@ -36,11 +41,17 @@ public class PrepareShooter extends CommandBase {
   public void initialize() {
     shooter.setVelocity((int) speed.getAsDouble()); 
     hood.setPosition((int) angle.getAsDouble());
+    limelight.setPipeline(Constants.LimelightConfig.TargetPipeline);
+    limelight.setLED(Limelight.LED.Default);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() { 
+    if (this.recalculate){
+      shooter.setVelocity((int) speed.getAsDouble()); 
+      hood.setPosition((int) angle.getAsDouble());  
+    }
 
     boolean shooterReady = shooter.isAtVelocity();
     boolean hoodReady = hood.isReady();
@@ -62,6 +73,8 @@ public class PrepareShooter extends CommandBase {
   public void end(boolean interrupted) {
     shooter.stop();
     shooter.close();
+
+    limelight.setLED(Limelight.LED.Off);
   }
 
   // Returns true when the command should end.

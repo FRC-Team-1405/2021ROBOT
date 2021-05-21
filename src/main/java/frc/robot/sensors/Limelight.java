@@ -25,7 +25,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
        private NetworkTableEntry getCamMode;
        private NetworkTableEntry tcornxy;
 
-       public class Position {
+       public static class Position {
            private final double height;
            private final double angle;
 
@@ -94,12 +94,14 @@ import edu.wpi.first.networktables.NetworkTableInstance;
        table.getEntry("pipeline").setNumber(id);
        }
 
-       public void setLED(byte mode) {
-       /* 0: Pipeline default (probably should just use this)
-          1: Off
-          2: Blink
-          3: On */
-       table.getEntry("ledMode").setNumber(mode);
+       public enum LED {Default, Off, Blink, On};
+       public void setLED(LED mode) {
+          switch (mode){
+              case Default: table.getEntry("ledMode").setNumber(0); break;
+              case Off:     table.getEntry("ledMode").setNumber(1); break;
+              case Blink:   table.getEntry("ledMode").setNumber(2); break;
+              case On:      table.getEntry("ledMode").setNumber(3); break;
+          }
        }
 
        public void setCameraMode(boolean turnOn) {

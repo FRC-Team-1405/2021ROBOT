@@ -43,7 +43,7 @@ public class DriveToBall extends CommandBase {
   @Override
   public void initialize() {
     limelight.setPipeline((byte) 9);
-    limelight.setLED((byte) 0);
+    limelight.setLED(Limelight.LED.Default);
   }
 
   // Called every time the scheduler runs while the command is scheduled.

@@ -153,4 +153,10 @@ public final class Constants {
         public final static double VelocityI = 0;
         public final static double VelocityD = 0;
     }
+
+    public class LimelightConfig {
+        public final static byte DrivePipeline   = 0;
+        public final static byte TargetPipeline  = 3;
+        public final static byte BallPipelien    = 9;
+    }
 }

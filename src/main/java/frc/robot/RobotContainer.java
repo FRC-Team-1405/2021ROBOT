@@ -39,12 +39,14 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -53,7 +55,7 @@ import frc.robot.subsystems.Hood;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.commands.DriveByAngle;
 import frc.robot.commands.DriveToBall;
-import frc.robot.commands.PrepareShooter;
+import frc.robot.commands.ShootContinous;
 import frc.robot.commands.ShootConstantly;
 import frc.robot.commands.SwerveDrive;
 import frc.robot.commands.TurnToBall;
@@ -89,11 +91,10 @@ public class RobotContainer {
   // private final ArcadeDrive driveBase = new ArcadeDrive();
   public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase(); 
   public final SwerveIntake intake = new SwerveIntake(); 
-  private Limelight limelight = new Limelight();
+  private Limelight limelight = new Limelight(new Limelight.Position(35.58, 14.29));
 
   private XboxController driver = new XboxController(Constants.pilot); 
   private XboxController operator = new XboxController(Constants.operator); 
-  private XboxController demoController = new XboxController(Constants.demoController);
   
   private Shooter shooter = new Shooter(); 
   private Hood hood = new Hood(); 
@@ -108,14 +109,24 @@ public class RobotContainer {
    */
   public RobotContainer() {
     // Configure the button bindings
-    configureButtonBindings();
+    configureDriverButtonBindings(); 
+    configureOperatorButtonBindings(); 
     initShuffleBoard();
     limelight.setPipeline((byte) 0);
-    limelight.setLED((byte) 1);
+    limelight.setLED(Limelight.LED.Off); 
+
+    swerveDriveBase.stop();
+    swerveDriveBase.zeroAzimuthEncoders();
+    swerveDriveBase.zeroGyro();
+    new FunctionalCommand(hood::zeroize, () -> {}, (interrupted) -> {}, hood::zeroizeComplete, hood).schedule();
 
     // Configure default commands
     // Set the default drive command to split-stick arcade drive
-    // driveBase.setDefaultCommand( new DefaultDrive( this::driveSpeed, this::driveRotation, driveBase) );  
+    // driveBase.setDefaultCommand( new DefaultDrive( this::driveSpeed, this::driveRotation, driveBase) ); 
+    
+    hood.setDefaultCommand(new RunCommand( () -> {
+      hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget()));
+    }, hood)); 
 
     boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
 
@@ -146,10 +157,8 @@ public class RobotContainer {
                                                             swerveDriveBase) );
     }
 */
-    swerveDriveBase.stop();
-    swerveDriveBase.zeroAzimuthEncoders();
-    swerveDriveBase.zeroGyro();
-    hood.zeroize();
+    
+    SmartDashboard.putBoolean("Lidar Ready", aimingLidar.getDistance() > 0); 
 
   }
 
@@ -291,13 +300,14 @@ public class RobotContainer {
     //  SmartDashboard.putData( new PowerDistributionPanel(Constants.PDP) );
   }
 
+  
   /**
    * Use this method to define your button->command mappings.  Buttons can be created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {
+  private void configureDriverButtonBindings() {
     /**
      * Driver:
      * +Left joystick: drive 
@@ -329,62 +339,42 @@ public class RobotContainer {
      * +Right joystick: right scissor
      * +Start: scissors enable
      */
-
-    new JoystickButton(driver, XboxController.Button.kB.value) 
-        .whenHeld(new SequentialCommandGroup(
-                        new TurnToBall(swerveDriveBase, limelight, 0.1), 
-                        new DriveToBall(swerveDriveBase, limelight))); 
-
-    new JoystickButton(driver, XboxController.Button.kA.value).whenPressed(new InstantCommand(shooter::testShoot, shooter)).whenReleased(shooter::stop, shooter);                     
-
-    //new JoystickButton(driver, XboxController.Button.kY.value).whenHeld(new ShootConstantly(shooter, hood, aimingLidar));                     
-
-    new JoystickButton(driver, XboxController.Button.kBumperLeft.value)
-      .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
-
     new JoystickButton(driver, XboxController.Button.kBumperRight.value) 
       .whenPressed(new InstantCommand(intake::intake, intake)) 
-      .whenReleased(new InstantCommand(intake::stop, intake));
-       
-    configureDemoController();
-  };
-
-  private void configureDemoController(){ 
-
-    SmartDashboard.putNumber("shooter speed", 0.0); 
-    SmartDashboard.putNumber("shooter angle", 0.0);
-    SmartDashboard.putNumber("shooter distance", 0.0);
-    DoubleSupplier angle = () -> { return swerveDriveBase.getPose().getRotation().getDegrees(); } ;
-
-    new JoystickButton(demoController, XboxController.Button.kY.value)
-            .whileHeld(new InstantCommand(() ->{
-                              hood.setPosition( (int) DistanceToAngle.calculate(distanceToTarget()));
-                            })); 
+      .whenReleased(new InstantCommand(intake::stop, intake)); 
     
-    new JoystickButton(demoController, XboxController.Button.kA.value)
-            .whileHeld( new PrepareShooter(  shooter, 
-                                            hood, 
-                                            () -> { return DistanceToPower.calculate(distanceToTarget());}, 
-                                            () -> { return DistanceToAngle.calculate(distanceToTarget());}
-                                            )); 
+    SmartDashboard.putBoolean("Intake Deployed", false);
+    new JoystickButton(driver, XboxController.Button.kBumperLeft.value) 
+    .toggleWhenPressed(new StartEndCommand( () -> SmartDashboard.putBoolean("Intake Deployed", true),
+                                            () -> SmartDashboard.putBoolean("Intake Deployed", false),
+                                            intake));
 
-    new JoystickButton(demoController, XboxController.Button.kX.value)
-            .whileHeld( new ParallelCommandGroup( 
-              new PrepareShooter( shooter, 
-                                            hood, 
-                                            () -> { return SmartDashboard.getNumber("shooter speed", 0.0);}, 
-                                            () -> { return SmartDashboard.getNumber("shooter angle", 0.0);}
-                                            ),
-              new RunCommand(() -> { SmartDashboard.putNumber("shooter distance", aimingLidar.getDistance()); })
-              )); 
-
-    new JoystickButton(demoController, XboxController.Button.kB.value)
-          // .whileHeld( new DriveByAngle( this::getForwardSwerve, this::getStrafeSwerve, this::angleToTarget, swerveDriveBase) );
-          .whileHeld( new RunCommand( () -> { 
-            SmartDashboard.putNumber("Target Angle", angleToTarget());
-            SmartDashboard.putNumber("Target Distance", distanceToTarget());
-           }));
-  } 
+    new JoystickButton(driver, XboxController.Button.kStickRight.value) 
+      .whileHeld( new DriveByAngle( this::getForwardSwerve, this::getStrafeSwerve, this::angleToTarget, swerveDriveBase) );
+  }; 
+  
+  private void configureOperatorButtonBindings(){ 
+    new JoystickButton(driver, XboxController.Button.kBumperLeft.value)
+      .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
+      
+    new JoystickButton(operator, XboxController.Button.kA.value)
+      .whileHeld( new ShootContinous(  shooter, 
+                                      hood, 
+                                      () -> { return DistanceToPower.calculate(distanceToTarget());}, 
+                                      () -> { return DistanceToAngle.calculate(distanceToTarget());},
+                                      limelight,
+                                      false
+                                      )); 
+     
+    new JoystickButton(operator, XboxController.Button.kY.value)
+      .whileHeld( new ShootContinous(  shooter, 
+                                      hood, 
+                                      () -> { return DistanceToPower.calculate(distanceToTarget());}, 
+                                      () -> { return DistanceToAngle.calculate(distanceToTarget());},
+                                      limelight,
+                                      true
+                                      )); 
+  }
 
   private double angleToTarget(){
     Pose2d robotPosition = swerveDriveBase.getPose() ;
@@ -392,7 +382,7 @@ public class RobotContainer {
 
     // TODO: Verify TargetPipeline
     // TODO: Verify Limelight Angle Direction
-    if (limelight.getPipeline() == 7 && limelight.hasTarget()) {
+    if (limelight.getPipeline() == 3 && limelight.hasTarget()) {
       return limelight.getTA();  
     } else {
       return robotPosition.getX() == 0.0 
@@ -406,15 +396,15 @@ public class RobotContainer {
     // TODO Verify Target height in cm
     double odometryDistance = Math.sqrt( Math.pow(swerveDriveBase.getPose().getX(), 2) + Math.pow(swerveDriveBase.getPose().getY(), 2) ) * 100.0;
     double lidarDistance = aimingLidar.getDistance();
-    double limelightDistance = limelight.getPipeline() == 7 ? limelight.fixedAngleDist(800.0) : Integer.MIN_VALUE;
+    double limelightDistance = limelight.getPipeline() == 3 ? limelight.fixedAngleDist(243.84) : Integer.MIN_VALUE;
 
     if ( Math.abs(odometryDistance - lidarDistance) > 100.0){
       lidarDistance = Integer.MIN_VALUE; // assume an object is blocking the lidar
     }
 
-    if (lidarDistance > 0)      return lidarDistance;
-    if (limelightDistance > 0)  return limelightDistance;
-    if (odometryDistance > 0)   return odometryDistance;
+    if (lidarDistance >= 0)      return lidarDistance;
+    if (limelightDistance >= 0)  return limelightDistance;
+    if (odometryDistance >= 0)   return odometryDistance;
 
     return Integer.MIN_VALUE; 
   }

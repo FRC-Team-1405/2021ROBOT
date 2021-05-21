@@ -36,7 +36,7 @@ public class TurnToBall extends CommandBase {
   @Override
   public void initialize() {
     limelight.setPipeline((byte) 9);
-    limelight.setLED((byte) 0);
+    limelight.setLED(Limelight.LED.Default);
   }
 
   @Override

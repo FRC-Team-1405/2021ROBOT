@@ -374,6 +374,25 @@ public class RobotContainer {
                                       limelight,
                                       true
                                       )); 
+
+    // TODO: verify shoot from trench distance 
+    new JoystickButton(operator, XboxController.Button.kX.value)
+      .whileHeld( new ShootContinous(  shooter, 
+                                      hood, 
+                                      () -> { return DistanceToPower.calculate(Units.feetToMeters(12)*100);}, 
+                                      () -> { return DistanceToAngle.calculate(Units.feetToMeters(12)*100);},
+                                      limelight,
+                                      true
+                                      )); 
+    // TODO: verify shoot from line distance
+    new JoystickButton(operator, XboxController.Button.kB.value)
+      .whileHeld( new ShootContinous(  shooter, 
+                                      hood, 
+                                      () -> { return DistanceToPower.calculate(Units.feetToMeters(10)*100);}, 
+                                      () -> { return DistanceToAngle.calculate(Units.feetToMeters(10)*100);},
+                                      limelight,
+                                      true
+                                      )); 
   }
 
   private double angleToTarget(){

@@ -14,10 +14,12 @@ import java.util.Map;
 import java.util.function.DoubleSupplier;
 import java.util.logging.Logger;
 
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -99,7 +101,6 @@ public class RobotContainer {
   private Shooter shooter = new Shooter(); 
   private Hood hood = new Hood(); 
   private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(8));
-
 
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
   public static double increase = 0; 
@@ -399,8 +400,6 @@ public class RobotContainer {
     Pose2d robotPosition = swerveDriveBase.getPose() ;
     double robotAngle = robotPosition.getRotation().getDegrees(); 
 
-    // TODO: Verify TargetPipeline
-    // TODO: Verify Limelight Angle Direction
     if (limelight.getPipeline() == 3 && limelight.hasTarget()) {
       return limelight.getTA();  
     } else {
@@ -410,9 +409,27 @@ public class RobotContainer {
     }
   }
 
+  private double speedLimit(){
+    Preferences prefs = Preferences.getInstance();
+    double min = prefs.getDouble("Speed Min", 0.3);
+    double mid = prefs.getDouble("Speed Mid", 0.7);
+    double max = prefs.getDouble("Speed Max", 1.0);
+
+    double value = driver.getTriggerAxis(Hand.kLeft) *  (min - mid)
+                 + driver.getTriggerAxis(Hand.kRight) * (mid -max)
+                 + mid;
+
+    SmartDashboard.putNumber("Dynamic Speed Limit", value);
+    return value;
+  }
+
+  private double distanceOffset(){
+    double value = -operator.getTriggerAxis(Hand.kLeft) + operator.getTriggerAxis(Hand.kRight);
+    SmartDashboard.putNumber("Distance Offset", value) ;
+    return value;
+  }
+  
   private double distanceToTarget(){
-    // TODO Verify Limelight target pipeline
-    // TODO Verify Target height in cm
     double odometryDistance = Math.sqrt( Math.pow(swerveDriveBase.getPose().getX(), 2) + Math.pow(swerveDriveBase.getPose().getY(), 2) ) * 100.0;
     double lidarDistance = aimingLidar.getDistance();
     double limelightDistance = limelight.getPipeline() == 3 ? limelight.fixedAngleDist(243.84) : Integer.MIN_VALUE;
@@ -421,9 +438,9 @@ public class RobotContainer {
       lidarDistance = Integer.MIN_VALUE; // assume an object is blocking the lidar
     }
 
-    if (lidarDistance >= 0)      return lidarDistance;
-    if (limelightDistance >= 0)  return limelightDistance;
-    if (odometryDistance >= 0)   return odometryDistance;
+    if (lidarDistance >= 0)      return lidarDistance     + distanceOffset();
+    if (limelightDistance >= 0)  return limelightDistance + distanceOffset();
+    if (odometryDistance >= 0)   return odometryDistance  + distanceOffset();
 
     return Integer.MIN_VALUE; 
   }

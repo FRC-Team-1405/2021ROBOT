@@ -327,29 +327,21 @@ public class SwerveDrive {
   public void updateOdometry() {
   // Update the pose
   m_odometry.update(getGyroAngle(), wheels[0].getState(), wheels[1].getState(), wheels[2].getState(), wheels[3].getState()); 
-
-  // System.out.printf("Wheel Angles %10.2f %10.2f %10.2f %10.2f\n", wheels[0].getState().angle.getDegrees(), wheels[1].getState().angle.getDegrees(), wheels[2].getState().angle.getDegrees(), wheels[3].getState().angle.getDegrees());
-  // if (Math.abs(wheels[0].getState().speedMetersPerSecond) > 0.01){
-  //   System.out.printf("Wheel Speed %10.2f %10.2f %10.2f %10.2f\n", wheels[0].getState().speedMetersPerSecond, wheels[1].getState().speedMetersPerSecond, wheels[2].getState().speedMetersPerSecond, wheels[3].getState().speedMetersPerSecond);
-  // }
   
-  SmartDashboard.putNumber("Odometry Angle", gyro.getAngle()); 
-
+  /* Debug Data
   Translation2d xy = m_odometry.getPoseMeters().getTranslation() ;
-
+  SmartDashboard.putNumber("Odometry Angle", gyro.getAngle()); 
   SmartDashboard.putNumber("Distance X", Units.metersToFeet(xy.getX()) * .9); 
-
   SmartDashboard.putNumber("Distance Y", Units.metersToFeet(xy.getY()) * .9);  
-
-  //SmartDashboard.putNumber("Front Right Speed", Units.metersToFeet(wheels[0].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec)); 
+  SmartDashboard.putNumber("Front Right Speed", Units.metersToFeet(wheels[0].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec)); 
   SmartDashboard.putNumber("Front Right Angle", wheels[0].getState().angle.getDegrees()); 
-  //SmartDashboard.putNumber("Front Left Speed", Units.metersToFeet(wheels[1].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
+  SmartDashboard.putNumber("Front Left Speed", Units.metersToFeet(wheels[1].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
   SmartDashboard.putNumber("Front Left Angle", wheels[1].getState().angle.getDegrees()); 
-  //SmartDashboard.putNumber("Back Left Speed", Units.metersToFeet(wheels[2].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
+  SmartDashboard.putNumber("Back Left Speed", Units.metersToFeet(wheels[2].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
   SmartDashboard.putNumber("Back Left Angle", wheels[2].getState().angle.getDegrees()); 
-  //SmartDashboard.putNumber("Back Right Speed", Units.metersToFeet(wheels[3].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
+  SmartDashboard.putNumber("Back Right Speed", Units.metersToFeet(wheels[3].getState().speedMetersPerSecond * Constants.VelocityConversions.SensorTimePerSec));
   SmartDashboard.putNumber("Back Right Angle", wheels[3].getState().angle.getDegrees()); 
-  
+  */
 
 
 } 

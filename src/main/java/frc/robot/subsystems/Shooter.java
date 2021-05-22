@@ -32,13 +32,7 @@ public class Shooter extends SubsystemBase {
   public Shooter(){    
     slave.setInverted(true);
     slave.follow(master);  
-
-    SmartDashboard.putNumber("Servo Test Value", 0); 
-    SmartDashboard.putNumber("Shooter Test Value", 0); 
-    
-
     close();
-    
 }
 
   @Override
@@ -76,8 +70,4 @@ public class Shooter extends SubsystemBase {
   public void close(){ 
     trigger.set(0.4); 
   } 
-
-  public void testShoot(){ 
-    master.set(ControlMode.PercentOutput, SmartDashboard.getNumber("Shooter Test Value", 0)); 
-  }
 }

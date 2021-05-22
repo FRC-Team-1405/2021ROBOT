@@ -52,12 +52,18 @@ public class Hood extends SubsystemBase {
   }
 
   public void setPosition(int position) {
+    if (!zeroizeComplete)
+      return ;
+
     targetAngle = position;
     angle.set(ControlMode.MotionMagic, targetAngle);
   };
 
   public int getPosition() {
-    int position = angle.getSelectedSensorPosition(); 
+    if (!zeroizeComplete)
+      return 0;
+
+      int position = angle.getSelectedSensorPosition(); 
     return position;
   };
 

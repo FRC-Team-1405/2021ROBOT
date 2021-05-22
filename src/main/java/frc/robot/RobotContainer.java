@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -41,6 +42,10 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -103,7 +108,6 @@ public class RobotContainer {
   private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(8));
 
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
-  public static double increase = 0; 
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -119,16 +123,42 @@ public class RobotContainer {
     swerveDriveBase.stop();
     swerveDriveBase.zeroAzimuthEncoders();
     swerveDriveBase.zeroGyro();
-    new FunctionalCommand(hood::zeroize, () -> {}, (interrupted) -> {}, hood::zeroizeComplete, hood).schedule();
 
+    // zeroize hood
+    /*
+    var zeroizeHood = new FunctionalCommand( 
+                              hood::zeroize, 
+                              () -> {}, 
+                              (interrupted) -> { hood.stop() ; },
+                              hood::zeroizeComplete, 
+                              hood);
+    zeroizeHood.withName("Zeroize Hood");
+    zeroizeHood.schedule();
+*/
     // Configure default commands
-    // Set the default drive command to split-stick arcade drive
-    // driveBase.setDefaultCommand( new DefaultDrive( this::driveSpeed, this::driveRotation, driveBase) ); 
+    var hoodControl = new FunctionalCommand(
+                                  () -> {
+                                    if (!hood.zeroizeComplete()){
+                                      hood.zeroize();
+                                    }
+                                  },
+                                  () -> {
+                                    if (hood.zeroizeComplete()){
+                                      hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget()));
+                                    }
+                                  },
+                                  (interupted) -> { hood.stop(); },
+                                  () -> { return false; },
+                                  hood);
+    hoodControl.withName("Dynamic Hood Control");
+    hood.setDefaultCommand( hoodControl );
     
-    hood.setDefaultCommand(new RunCommand( () -> {
-      hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget()));
-    }, hood)); 
-
+    // Configure default commands
+  /*
+    var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); }, hood );
+    hoodControl.withName("Dynamic Hood Control");
+    hood.setDefaultCommand( hoodControl );
+*/
     boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
 
     
@@ -216,7 +246,6 @@ public class RobotContainer {
   SendableChooser<Integer> autoSelector; 
    
   private void initShuffleBoard(){
-    SmartDashboard.putNumber("Shooter/Increase", increase);
     autoSelector = new SendableChooser<Integer>();
     autoSelector.addOption("Do nothing", 0);
     autoSelector.addOption("Drive forward.", 1);
@@ -239,24 +268,60 @@ public class RobotContainer {
     InstantCommand setPosition;
     setPosition = new InstantCommand(() -> {
                           double distanceMeters = aimingLidar.getDistance()/100.0;
-                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters, 0.0, swerveDriveBase.getPose().getRotation()) );
+                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters, -1.0, swerveDriveBase.getPose().getRotation()) );
                         }) ;
-    setPosition.setName("Center Position");
+    setPosition.setName("Left");
+    autoTab.add( setPosition );
+
+    setPosition = new InstantCommand(() -> {
+                          double distanceMeters = aimingLidar.getDistance()/100.0;
+                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters,  0.0, swerveDriveBase.getPose().getRotation()) );
+                        }) ;
+    setPosition.setName("Center");
+    autoTab.add( setPosition );
+
+    setPosition = new InstantCommand(() -> {
+                          double distanceMeters = aimingLidar.getDistance()/100.0;
+                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters,  1.0, swerveDriveBase.getPose().getRotation()) );
+                        }) ;
+    setPosition.setName("Right");
     autoTab.add( setPosition );
   
     if(!Robot.fmsAttached){
       ShuffleboardTab testCommandsTab = Shuffleboard.getTab("Test Commands"); 
-      // testCommandsTab.add( new TestShooter(launcher, driver::getPOV));
-      // testCommandsTab.add( new FireOnce(launcher)
-      //                 .andThen(new InstantCommand( () -> {launcher.stopFlywheels(); launcher.stopIndexer();}) )); 
       testCommandsTab.add(new ZeroizeSwerveModules(swerveDriveBase)); 
       testCommandsTab.add(new ZeroizeOdometry(swerveDriveBase));
-      testCommandsTab.add( new InstantCommand(() -> 
-      {
-        if (!hood.zeroizeComplete()) {
-          hood.zeroizeComplete();
-        }
-      }, hood));
+
+      // Test Fire Command
+      SmartDashboard.putNumber("Shooter/Power", 0);
+      SmartDashboard.putNumber("Shooter/Angle", 0);
+      var testFire = new ShootContinous(  shooter, 
+                                          hood, 
+                                          () -> { return SmartDashboard.getNumber("Shooter/Power",0);}, 
+                                          () -> { return SmartDashboard.getNumber("Shooter/Angle",0);},
+                                          limelight,
+                                          true
+                                          );
+      testFire.withName("Test Fire"); 
+      testCommandsTab.add( testFire );
+
+      // Measure Distance
+      SmartDashboard.putNumber("Shooter/Distance", 0);
+      var readDistance = new RunCommand( () -> { SmartDashboard.putNumber("Shooter/Distance", distanceToTarget()); });
+      readDistance.withName("Read Distance");
+      testCommandsTab.add( readDistance );
+
+      // Enable Target Camera
+      var targetCamera = new StartEndCommand( 
+          () -> { 
+            limelight.setPipeline(Constants.LimelightConfig.TargetPipeline);
+            limelight.setLED(Limelight.LED.Default);
+          },
+          () -> {
+            limelight.setLED(Limelight.LED.Off);
+          });
+      targetCamera.withName("Camera Target");
+      testCommandsTab.add( targetCamera );
       // testCommandsTab.add( new DriveByVelocity(driveBase));
 
       // RunCommand readDistance = new RunCommand(lidar::readDistance);
@@ -423,24 +488,24 @@ public class RobotContainer {
     return value;
   }
 
-  private double distanceOffset(){
-    double value = -operator.getTriggerAxis(Hand.kLeft) + operator.getTriggerAxis(Hand.kRight);
-    SmartDashboard.putNumber("Distance Offset", value) ;
-    return value;
-  }
-  
   private double distanceToTarget(){
     double odometryDistance = Math.sqrt( Math.pow(swerveDriveBase.getPose().getX(), 2) + Math.pow(swerveDriveBase.getPose().getY(), 2) ) * 100.0;
     double lidarDistance = aimingLidar.getDistance();
-    double limelightDistance = limelight.getPipeline() == 3 ? limelight.fixedAngleDist(243.84) : Integer.MIN_VALUE;
+    double limelightDistance = limelight.getPipeline() == Constants.LimelightConfig.TargetPipeline ? limelight.fixedAngleDist(243.84) : Integer.MIN_VALUE;
+
+    double offset = -operator.getTriggerAxis(Hand.kLeft)*100.0 + operator.getTriggerAxis(Hand.kRight)*100;
+    SmartDashboard.putNumber("Distance/Offset",     offset) ;
+    SmartDashboard.putString("Distance/Odomentry",  odometryDistance   >= 0 ? String.format("%.0f",odometryDistance)  : "N/A") ;
+    SmartDashboard.putString("Distance/Lidar",      lidarDistance      >= 0 ? String.format("%.0f",lidarDistance)     : "N/A") ;
+    SmartDashboard.putString("Distance/Limelight",  limelightDistance  >= 0 ? String.format("%.0f",limelightDistance) : "N/A") ;
 
     if ( Math.abs(odometryDistance - lidarDistance) > 100.0){
       lidarDistance = Integer.MIN_VALUE; // assume an object is blocking the lidar
     }
 
-    if (lidarDistance >= 0)      return lidarDistance     + distanceOffset();
-    if (limelightDistance >= 0)  return limelightDistance + distanceOffset();
-    if (odometryDistance >= 0)   return odometryDistance  + distanceOffset();
+    if (lidarDistance >= 0)      return lidarDistance     + offset;
+    if (limelightDistance >= 0)  return limelightDistance + offset;
+    if (odometryDistance >= 0)   return odometryDistance  + offset;
 
     return Integer.MIN_VALUE; 
   }

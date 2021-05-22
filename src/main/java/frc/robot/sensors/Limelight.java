@@ -186,6 +186,6 @@ import edu.wpi.first.networktables.NetworkTableInstance;
             return Integer.MIN_VALUE;
         }
 
-        return (targetHeight-cameraPosition.getHeight()) / Math.tan(this.getTY()+cameraPosition.getAngle()) ;
+        return (targetHeight-cameraPosition.getHeight()) / Math.tan(Math.toRadians(this.getTY()+cameraPosition.getAngle())) ;
     }
    }

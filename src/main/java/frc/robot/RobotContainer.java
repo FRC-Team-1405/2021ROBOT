@@ -106,17 +106,6 @@ public class RobotContainer {
     swerveDriveBase.zeroAzimuthEncoders();
     swerveDriveBase.zeroGyro();
 
-    // zeroize hood
-    /*
-    var zeroizeHood = new FunctionalCommand( 
-                              hood::zeroize, 
-                              () -> {}, 
-                              (interrupted) -> { hood.stop() ; },
-                              hood::zeroizeComplete, 
-                              hood);
-    zeroizeHood.withName("Zeroize Hood");
-    zeroizeHood.schedule();
-*/
     // Configure default commands
     var hoodControl = new FunctionalCommand(
                                   () -> {
@@ -134,23 +123,6 @@ public class RobotContainer {
                                   hood);
     hoodControl.withName("Dynamic Hood Control");
     hood.setDefaultCommand( hoodControl );
-    
-    // Configure default commands
-  /*
-    var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); }, hood );
-    hoodControl.withName("Dynamic Hood Control");
-    hood.setDefaultCommand( hoodControl );
-*/
-    boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
-
-    
-
-    swerveDriveBase.setDefaultCommand( new SwerveDrive( this::getForwardSwerve, 
-                                                        this::getStrafeSwerve, 
-                                                        isLogitech ? this::getYawSwerveLogitech : this::getYawSwerveXboxController, 
-                                                        isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
-                                                        swerveDriveBase) ); 
-
 /*
     switch(joystickSelector.getSelected()){
       case "Logitech":
@@ -182,8 +154,6 @@ public class RobotContainer {
   public double getStrafeSwerve() {
     return driver.getX(Hand.kLeft);
   } 
-
-
 
   /** Right stick Y (left-right) axis. */
   public double getYawSwerveXboxController() {
@@ -340,57 +310,73 @@ public class RobotContainer {
    * {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureDriverButtonBindings() {
+    boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
     /**
      * Driver:
-     * +Left joystick: drive 
-     * +Right joystick: turn
-     * +B: drive backwards
-     * +Right bumper: intake
-     * +Left bumper: outtake
+     * +Left joystick: swerve forward/reverse
+     * +Right joystick: swerve left/right
+     * +Right joystick press: face target
+     * +A: 
+     * +B: 
      * +X: toggle intake elevation
-     * +D-pad up: increase shooter power
-     * +D-pad down: decrease shooter power
-     * +A: toggle Drive to ball
-     * 
-     * Operator:
-     * +Right bumper: run indexer
-     * +Left bumper: shoot
-     * +Y: prep flywheels auto
-     * +B: prep flywheels close
-     * 
-     * +A: prep flywheels far
-     * +X: stop flywheels
-     * +Left trigger: manual turret adjust left
-     * +Right trigger: manual turret adjust right
-     * +D-pad left: toggle limelight pipeline
-     * +D-pad right toggle shooter elevation
-     * +D-pad up
-     * : scissors up
-     * +D-pad down: scissors down
-     * +Left joystick: left scissor
-     * +Right joystick: right scissor
-     * +Start: scissors enable
+     * +Y: 
+     * +Right bumper: intake
+     * +Left bumper: intake deploy/retract
+     * +Right trigger: increase shooter distance
+     * +Left trigger: decrease shooter distance
+     * +D-pad up: 
+     * +D-pad down: 
+     * +D-pad left:
+     * +D-pad right:
      */
+    swerveDriveBase.setDefaultCommand( new SwerveDrive( this::getForwardSwerve, 
+                                                        this::getStrafeSwerve, 
+                                                        isLogitech ? this::getYawSwerveLogitech : this::getYawSwerveXboxController, 
+                                                        isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
+                                                        swerveDriveBase) ); 
+
     new JoystickButton(driver, XboxController.Button.kBumperRight.value) 
-      .whenPressed(new InstantCommand(intake::intake, intake)) 
-      .whenReleased(new InstantCommand(intake::stop, intake)); 
+          .whenPressed(new InstantCommand(intake::intake, intake)) 
+          .whenReleased(new InstantCommand(intake::stop, intake)); 
     
     SmartDashboard.putBoolean("Intake Deployed", false);
     new JoystickButton(driver, XboxController.Button.kBumperLeft.value) 
-    .toggleWhenPressed(new StartEndCommand( () -> SmartDashboard.putBoolean("Intake Deployed", true),
-                                            () -> SmartDashboard.putBoolean("Intake Deployed", false),
-                                            intake));
+          .toggleWhenPressed(new StartEndCommand( () -> SmartDashboard.putBoolean("Intake Deployed", true),
+                                                  () -> SmartDashboard.putBoolean("Intake Deployed", false),
+                                                  intake));
 
     new JoystickButton(driver, XboxController.Button.kStickRight.value) 
-      .whileHeld( new DriveByAngle( this::getForwardSwerve, this::getStrafeSwerve, this::angleToTarget, swerveDriveBase) );
+          .whileHeld( new DriveByAngle( this::getForwardSwerve, 
+                                        this::getStrafeSwerve, 
+                                        isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
+                                        this::angleToTarget, 
+                                        swerveDriveBase) );
   }; 
   
   private void configureOperatorButtonBindings(){ 
+    /**
+     * Operator:
+     * +Right bumper: 
+     * +Left bumper: shoot now
+     * +B: shoot from the front of the trench
+     * +A: sample distance once then shoot
+     * +X: shoot from the back of the trench
+     * +Y: sampel distance continous and shoot
+     * +Left trigger: 
+     * +Right trigger: 
+     * +D-pad up: 
+     * +D-pad down: 
+     * +D-pad left: 
+     * +D-pad right: 
+     * +Left joystick:
+     * +Right joystick:
+     * +Start: 
+     */
     new JoystickButton(driver, XboxController.Button.kBumperLeft.value)
       .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
       
     new JoystickButton(operator, XboxController.Button.kA.value)
-      .whileHeld( new ShootContinous(  shooter, 
+      .whileHeld( new ShootContinous( shooter, 
                                       hood, 
                                       () -> { return DistanceToPower.calculate(distanceToTarget());}, 
                                       () -> { return DistanceToAngle.calculate(distanceToTarget());},
@@ -399,7 +385,7 @@ public class RobotContainer {
                                       )); 
      
     new JoystickButton(operator, XboxController.Button.kY.value)
-      .whileHeld( new ShootContinous(  shooter, 
+      .whileHeld( new ShootContinous( shooter, 
                                       hood, 
                                       () -> { return DistanceToPower.calculate(distanceToTarget());}, 
                                       () -> { return DistanceToAngle.calculate(distanceToTarget());},
@@ -407,21 +393,21 @@ public class RobotContainer {
                                       true
                                       )); 
 
-    // TODO: verify shoot from trench distance 
+    // shoot from back of trench 
     new JoystickButton(operator, XboxController.Button.kX.value)
       .whileHeld( new ShootContinous(  shooter, 
                                       hood, 
-                                      () -> { return DistanceToPower.calculate(Units.feetToMeters(12)*100);}, 
-                                      () -> { return DistanceToAngle.calculate(Units.feetToMeters(12)*100);},
+                                      () -> { return DistanceToPower.calculate(815);}, 
+                                      () -> { return DistanceToAngle.calculate(815);},
                                       limelight,
                                       true
                                       )); 
-    // TODO: verify shoot from line distance
+    // shoot from front of trench
     new JoystickButton(operator, XboxController.Button.kB.value)
       .whileHeld( new ShootContinous(  shooter, 
                                       hood, 
-                                      () -> { return DistanceToPower.calculate(Units.feetToMeters(10)*100);}, 
-                                      () -> { return DistanceToAngle.calculate(Units.feetToMeters(10)*100);},
+                                      () -> { return DistanceToPower.calculate(624);}, 
+                                      () -> { return DistanceToAngle.calculate(624);},
                                       limelight,
                                       true
                                       )); 
@@ -447,20 +433,6 @@ public class RobotContainer {
 
     SmartDashboard.putString("Angle/Odomentry",  odometryAngle) ;
     SmartDashboard.putString("Angle/Limelight",  limelightAngle) ;
-    return value;
-  }
-
-  private double speedLimit(){
-    Preferences prefs = Preferences.getInstance();
-    double min = prefs.getDouble("Speed Min", 0.3);
-    double mid = prefs.getDouble("Speed Mid", 0.7);
-    double max = prefs.getDouble("Speed Max", 1.0);
-
-    double value = driver.getTriggerAxis(Hand.kLeft) *  (min - mid)
-                 + driver.getTriggerAxis(Hand.kRight) * (mid -max)
-                 + mid;
-
-    SmartDashboard.putNumber("Dynamic Speed Limit", value);
     return value;
   }
 

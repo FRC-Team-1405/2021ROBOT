@@ -16,7 +16,7 @@ import frc.robot.subsystems.SwerveDriveBase;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class DriveByAngle extends PIDCommand {
   /** Creates a new DriveByAngle. */
-  public DriveByAngle(DoubleSupplier forward, DoubleSupplier strafe, DoubleSupplier sensor, SwerveDriveBase drive) {
+  public DriveByAngle(DoubleSupplier forward, DoubleSupplier strafe, DoubleSupplier speedLimit, DoubleSupplier sensor, SwerveDriveBase drive) {
     super(
         // The controller that the command will use
         new PIDController(0.01, 0.0001, 0),
@@ -26,7 +26,7 @@ public class DriveByAngle extends PIDCommand {
         () -> 0,
         // This uses the output
         output -> {
-          drive.drive(forward.getAsDouble(), strafe.getAsDouble(), -output, 1.0);
+          drive.drive(forward.getAsDouble(), strafe.getAsDouble(), -output, speedLimit.getAsDouble());
         });
 
       this.sensor = sensor;
@@ -37,7 +37,7 @@ public class DriveByAngle extends PIDCommand {
     // Configure additional PID options by calling `getController` here.
   }
 
-    private DoubleSupplier sensor;
+  private DoubleSupplier sensor;
 
   // Returns true when the command should end.
   @Override

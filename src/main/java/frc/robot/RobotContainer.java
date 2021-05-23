@@ -11,25 +11,19 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.function.DoubleSupplier;
 import java.util.logging.Logger;
 
-import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Preferences;
-import edu.wpi.first.wpilibj.Sendable;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
-import edu.wpi.first.wpilibj.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -42,13 +36,8 @@ import edu.wpi.first.wpilibj.trajectory.TrajectoryUtil;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
@@ -57,28 +46,21 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.POVButton;
 import frc.robot.subsystems.Hood;
-import frc.robot.Constants.ShooterConstants;
 import frc.robot.commands.DriveByAngle;
-import frc.robot.commands.DriveToBall;
 import frc.robot.commands.ShootContinous;
-import frc.robot.commands.ShootConstantly;
 import frc.robot.commands.SwerveDrive;
-import frc.robot.commands.TurnToBall;
 import frc.robot.commands.ZeroizeOdometry;
 import frc.robot.commands.ZeroizeSwerveModules;
 import frc.robot.lib.CustomPIDController;
 import frc.robot.lib.DistanceToAngle;
 import frc.robot.lib.DistanceToPower;
-import frc.robot.lib.Interpolate;
 import frc.robot.lib.MathTools;
 import frc.robot.lib.SmartBooleanSupplier;
 import frc.robot.lib.SmartSupplier;
 import frc.robot.lib.thirdcoast.swerve.SwerveDrive.DriveMode;
 import frc.robot.sensors.LidarLitePWM;
 import frc.robot.sensors.Limelight;
-import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SwerveDriveBase;
 import frc.robot.subsystems.SwerveIntake;
@@ -164,11 +146,10 @@ public class RobotContainer {
     
 
     swerveDriveBase.setDefaultCommand( new SwerveDrive( this::getForwardSwerve, 
-    this::getStrafeSwerve, 
-    isLogitech ? this::getYawSwerveLogitech : this::getYawSwerveXboxController, 
-    (() -> { return swerveDriveBase.getPose().getRotation().getDegrees() ; }),
-    isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
-    swerveDriveBase) ); 
+                                                        this::getStrafeSwerve, 
+                                                        isLogitech ? this::getYawSwerveLogitech : this::getYawSwerveXboxController, 
+                                                        isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
+                                                        swerveDriveBase) ); 
 
 /*
     switch(joystickSelector.getSelected()){
@@ -191,24 +172,6 @@ public class RobotContainer {
     
     SmartDashboard.putBoolean("Lidar Ready", aimingLidar.getDistance() > 0); 
 
-  }
-
-  //SlewRateLimiter driveSpeedFilter = new SlewRateLimiter(0.5);
-  private double driveSpeed(){
-    double speed = -driver.getY(Hand.kLeft);
-    if(Math.abs(speed) < Constants.deadBand)
-      speed = 0.0;
-    return speed;
-  }
-
-  //SlewRateLimiter driveRotationFilter = new SlewRateLimiter(0.5);
-  private double driveRotation(){
-    double rotation = driver.getX(Hand.kRight);
-    if(Math.abs(rotation) < Constants.deadBand)
-      rotation = 0.0;
-    // SmartDashboard.putNumber("Drive_Rotation", rotation);
-    // return driveRotationFilter.calculate(rotation);
-    return rotation;
   }
 
   public double getForwardSwerve() {
@@ -322,8 +285,7 @@ public class RobotContainer {
           });
       targetCamera.withName("Camera Target");
       testCommandsTab.add( targetCamera );
-      // testCommandsTab.add( new DriveByVelocity(driveBase));
-
+      
       // RunCommand readDistance = new RunCommand(lidar::readDistance);
       // readDistance.setName("Read_Distance");
       // testCommandsTab.add(readDistance);
@@ -638,23 +600,6 @@ return new SequentialCommandGroup(
 
    return runTrajecotory(trajectory); 
   }  
-
-  private Command circle(){ 
-    TrajectoryConfig config = new TrajectoryConfig(
-      Constants.SwerveBase.maxSpeed,
-      Constants.SwerveBase.maxAcceleration)
-  // Add kinematics to ensure max speed is actually obeyed
-  .setKinematics(swerveDriveBase.getKinematics()); 
-
-  Trajectory circle = TrajectoryGenerator.generateTrajectory( new Pose2d(0, 0, new Rotation2d(0)), 
-  List.of(new Translation2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), 0 * Units.feetToMeters(Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(4 * Constants.VelocityConversions.ScaleFactor), 4 * Constants.VelocityConversions.ScaleFactor), 
-          new Translation2d(Units.feetToMeters(8 * Constants.VelocityConversions.ScaleFactor), 0 * Units.feetToMeters(Constants.VelocityConversions.ScaleFactor)), 
-          new Translation2d(Units.feetToMeters(-4* Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(-4* Constants.VelocityConversions.ScaleFactor))), 
-          new Pose2d(0, 0, new Rotation2d(0)), config);  
-   
-
-  return runTrajecotory(circle); }
 
   private Command waypointSlalom(){ 
   // Create config for trajectory

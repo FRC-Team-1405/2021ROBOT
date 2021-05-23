@@ -1,7 +1,5 @@
 package frc.robot.lib;
 
-import edu.wpi.first.wpilibj.util.Units;
-
 public class DistanceToAngle {
     private static Interpolate table = new Interpolate( new Interpolate.Point[] {
         new Interpolate.Point(75.8, 0),

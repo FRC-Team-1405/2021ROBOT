@@ -2,7 +2,6 @@ package frc.robot.lib.thirdcoast.swerve;
 
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.TimedRobot;
-import frc.robot.lib.SmartSupplier;
 
 public class SwerveDriveConfig {
 

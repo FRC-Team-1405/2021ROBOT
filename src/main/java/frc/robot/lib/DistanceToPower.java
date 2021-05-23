@@ -1,7 +1,5 @@
 package frc.robot.lib;
 
-import edu.wpi.first.wpilibj.util.Units;
-
 /** Add your docs here. */
 public class DistanceToPower { 
   private static Interpolate table = new Interpolate( new Interpolate.Point[] {

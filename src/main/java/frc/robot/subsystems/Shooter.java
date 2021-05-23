@@ -6,22 +6,15 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.SlewRateLimiter;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.sensors.LidarLitePWM;
 
 public class Shooter extends SubsystemBase {
   TalonSRX master = new TalonSRX(Constants.shooterMaster);
   TalonSRX slave = new TalonSRX(Constants.shooterSlave); 
-  
-  
 
   Servo trigger = new Servo(0); 
   
@@ -33,16 +26,13 @@ public class Shooter extends SubsystemBase {
     slave.setInverted(true);
     slave.follow(master);  
     close();
-}
+  }
 
   @Override
   public void periodic() {
     int newVelocity = (int)rateLimit.calculate(targetVelocity);
     if((int)master.getClosedLoopTarget() != newVelocity)
       master.set(ControlMode.Velocity, newVelocity); 
-    //trigger.set(SmartDashboard.getNumber("Servo Test Value", 0)); 
-    //Aiming lidar returns in cms so we make it feet cuz this isn't Europe or really anywhere but the US :shrug:
-    //SmartDashboard.putNumber("Lidar Distance", Units.metersToFeet(aimingLidar.getDistance() / 100));
   }
 
   public void setVelocity(int velocity){

@@ -268,11 +268,15 @@ public class RobotContainer {
       testFire.withName("Test Fire"); 
       testCommandsTab.add( testFire );
 
-      // Measure Distance
+      // Measure distance & angle
       SmartDashboard.putNumber("Shooter/Distance", 0);
-      var readDistance = new RunCommand( () -> { SmartDashboard.putNumber("Shooter/Distance", distanceToTarget()); });
-      readDistance.withName("Read Distance");
-      testCommandsTab.add( readDistance );
+      SmartDashboard.putNumber("Shooter/Angle", 0);
+      var readDistanceAngle = new RunCommand( () -> { 
+        SmartDashboard.putNumber("Shooter/Distance", distanceToTarget()); 
+        SmartDashboard.putNumber("Shooter/Angle", angleToTarget());
+      });
+      readDistanceAngle.withName("Distance & Angle");
+      testCommandsTab.add( readDistanceAngle );
 
       // Enable Target Camera
       var targetCamera = new StartEndCommand( 
@@ -427,13 +431,23 @@ public class RobotContainer {
     Pose2d robotPosition = swerveDriveBase.getPose() ;
     double robotAngle = robotPosition.getRotation().getDegrees(); 
 
-    if (limelight.getPipeline() == 3 && limelight.hasTarget()) {
-      return limelight.getTA();  
-    } else {
-      return robotPosition.getX() == 0.0 
-        ? 0.0
-        : robotAngle - Math.toDegrees( Math.atan( robotPosition.getY() / robotPosition.getX() )) ;
+    String odometryAngle  = "N/A";
+    String limelightAngle = "N/A";
+    double value;
+    
+    value = robotPosition.getX() == 0.0
+                ? 0.0
+                : robotAngle - Math.toDegrees( Math.atan( robotPosition.getY() / robotPosition.getX() )) ;
+    odometryAngle = String.format("%.1f", value);
+
+    if (limelight.getPipeline() == Constants.LimelightConfig.TargetPipeline && limelight.hasTarget()) {
+      value = limelight.getTA();
+      odometryAngle = String.format("%.1f", value);
     }
+
+    SmartDashboard.putString("Angle/Odomentry",  odometryAngle) ;
+    SmartDashboard.putString("Angle/Limelight",  limelightAngle) ;
+    return value;
   }
 
   private double speedLimit(){

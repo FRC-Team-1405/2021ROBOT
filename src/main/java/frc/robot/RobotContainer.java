@@ -318,7 +318,7 @@ public class RobotContainer {
      * +Right joystick press: face target
      * +A: 
      * +B: 
-     * +X: toggle intake elevation
+     * +X: turn 180
      * +Y: 
      * +Right bumper: intake
      * +Left bumper: intake deploy/retract
@@ -351,6 +351,13 @@ public class RobotContainer {
                                         isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
                                         this::angleToTarget, 
                                         swerveDriveBase) );
+                        
+    new JoystickButton(driver, XboxController.Button.kA.value)
+          .whileHeld( new DriveByAngle( this::getForwardSwerve,
+                                        this::getStrafeSwerve,
+                                        isLogitech ? this::getStrafeSwerve : this::getSpeedLimitXboxController,
+                                        this::angle_180,
+                                        swerveDriveBase) );
   }; 
   
   private void configureOperatorButtonBindings(){ 
@@ -358,9 +365,9 @@ public class RobotContainer {
      * Operator:
      * +Right bumper: 
      * +Left bumper: shoot now
-     * +B: shoot from the front of the trench
      * +A: sample distance once then shoot
-     * +X: shoot from the back of the trench
+     * +B: shoot from the trench
+     * +X: shoot to the trench
      * +Y: sampel distance continous and shoot
      * +Left trigger: 
      * +Right trigger: 
@@ -393,24 +400,31 @@ public class RobotContainer {
                                       true
                                       )); 
 
-    // shoot from back of trench 
+    // shoot into the trench
+    // TODO verify power and angle for a low into trench shot
+    // TODO or a high shot into the trench
     new JoystickButton(operator, XboxController.Button.kX.value)
       .whileHeld( new ShootContinous(  shooter, 
                                       hood, 
-                                      () -> { return DistanceToPower.calculate(815);}, 
-                                      () -> { return DistanceToAngle.calculate(815);},
+                                      () -> { return DistanceToPower.calculate(Constants.Hood.LoadingToTrench)+distanceOffset();}, 
+                                      () -> { return Constants.Hood.maxAngle;},
                                       limelight,
                                       true
                                       )); 
-    // shoot from front of trench
+    // shoot from the trench
     new JoystickButton(operator, XboxController.Button.kB.value)
       .whileHeld( new ShootContinous(  shooter, 
                                       hood, 
-                                      () -> { return DistanceToPower.calculate(624);}, 
-                                      () -> { return DistanceToAngle.calculate(624);},
+                                      () -> { return DistanceToPower.calculate(Constants.Hood.TrenchToTarget+distanceOffset());}, 
+                                      () -> { return DistanceToAngle.calculate(Constants.Hood.TrenchToTarget+distanceOffset());},
                                       limelight,
                                       true
                                       )); 
+  }
+
+  private double angle_180(){
+    double robotAngle = swerveDriveBase.getPose().getRotation().getDegrees(); 
+    return Math.IEEEremainder(robotAngle+180.0, 360.0);
   }
 
   private double angleToTarget(){
@@ -436,12 +450,16 @@ public class RobotContainer {
     return value;
   }
 
+  private double distanceOffset(){
+    return -operator.getTriggerAxis(Hand.kLeft)*100.0 + operator.getTriggerAxis(Hand.kRight)*100;
+  }
+
   private double distanceToTarget(){
     double odometryDistance = Math.sqrt( Math.pow(swerveDriveBase.getPose().getX(), 2) + Math.pow(swerveDriveBase.getPose().getY(), 2) ) * 100.0;
     double lidarDistance = aimingLidar.getDistance();
     double limelightDistance = limelight.getPipeline() == Constants.LimelightConfig.TargetPipeline ? limelight.fixedAngleDist(243.84) : Integer.MIN_VALUE;
 
-    double offset = -operator.getTriggerAxis(Hand.kLeft)*100.0 + operator.getTriggerAxis(Hand.kRight)*100;
+    double offset = distanceOffset();
     SmartDashboard.putNumber("Distance/Offset",     offset) ;
     SmartDashboard.putString("Distance/Odomentry",  odometryDistance   >= 0 ? String.format("%.0f",odometryDistance)  : "N/A") ;
     SmartDashboard.putString("Distance/Lidar",      lidarDistance      >= 0 ? String.format("%.0f",lidarDistance)     : "N/A") ;

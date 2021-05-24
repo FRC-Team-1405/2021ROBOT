@@ -47,6 +47,9 @@ public final class Constants {
 
     public static class Hood {
         public final static int maxError = 100;
+        public final static int maxAngle = 36000;
+        public final static int TrenchToTarget = 850;
+        public final static int LoadingToTrench = 750;
     }
 
     public final static int intakeTalon = 5;

@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -16,32 +17,48 @@ public class Hood extends SubsystemBase {
   private WPI_TalonSRX angle = new WPI_TalonSRX(Constants.shooterAngle);
   private static final double ZEROIZE_SPEED = -0.4;
 
+  private enum Zeroize {
+    Initialize{
+      public Zeroize execute(TalonSRX motor) {
+        motor.set(ControlMode.PercentOutput, ZEROIZE_SPEED);
+        return Zeroize;
+      };
+    },
+    Zeroize{
+      public Zeroize execute(TalonSRX motor) {
+        if (motor.isRevLimitSwitchClosed() == 1){
+          motor.set(ControlMode.PercentOutput, 0);
+          return Ready;
+        }
+        return this;
+      };
+    },
+    Ready{
+      public Zeroize execute(TalonSRX motor) {
+        return this;
+      };
+    };
+    public abstract Zeroize execute(TalonSRX motor);
+  };
+  
+  
+  private Zeroize zeroizeState = Zeroize.Initialize;
+
   public Hood() {
     stop();
   }
 
   @Override
   public void periodic() {
-    if (zeroizeActive) {
-      if (angle.isRevLimitSwitchClosed() == 1){
-        angle.set(ControlMode.PercentOutput, 0);
-        zeroizeActive = false;
-        zeroizeComplete = true;
-      }
-    }
+    zeroizeState = zeroizeState.execute(angle); 
   }
 
-  private boolean zeroizeActive = false;
-  private boolean zeroizeComplete = false;
   public void zeroize(){
-    if (!zeroizeActive){
-      zeroizeActive = true;
-      angle.set(ControlMode.PercentOutput, ZEROIZE_SPEED);
-    }
+    zeroizeState = Zeroize.Initialize;
   }
 
   public boolean zeroizeComplete(){
-    return zeroizeComplete;
+    return zeroizeState == Zeroize.Ready;
   }
 
   public void stop(){
@@ -50,7 +67,7 @@ public class Hood extends SubsystemBase {
   }
 
   public void setPosition(int position) {
-    if (!zeroizeComplete)
+    if (zeroizeState != Zeroize.Ready)
       return ;
 
     targetAngle = position;
@@ -58,7 +75,7 @@ public class Hood extends SubsystemBase {
   };
 
   public int getPosition() {
-    if (!zeroizeComplete)
+    if (zeroizeState != Zeroize.Ready)
       return 0;
 
       int position = angle.getSelectedSensorPosition(); 

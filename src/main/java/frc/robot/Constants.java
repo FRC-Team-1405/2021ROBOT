@@ -9,6 +9,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.wpilibj.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -34,10 +35,10 @@ public final class Constants {
         public final static int azimuthBackLeft = 23;
         public final static int azimuthBackRight = 24; 
 
-        public final static Translation2d frontLeftLocation = new Translation2d(0.330, -0.279);
-        public final static Translation2d frontRightLocation = new Translation2d(0.330, -0.279);
-        public final static Translation2d backLeftLocation = new Translation2d(-0.330, -0.279);
-        public final static Translation2d backRightLocation = new Translation2d(-0.330, 0.279); 
+        public final static Translation2d frontLeftLocation = new Translation2d(Units.feetToMeters(.791), -Units.feetToMeters(1.125));
+        public final static Translation2d frontRightLocation = new Translation2d(Units.feetToMeters(.791), -Units.feetToMeters(1.125));
+        public final static Translation2d backLeftLocation = new Translation2d(-Units.feetToMeters(.791), Units.feetToMeters(1.125));
+        public final static Translation2d backRightLocation = new Translation2d(-Units.feetToMeters(.791), Units.feetToMeters(1.125)); 
 
         public final static double maxAcceleration = 1; 
         public final static double maxSpeed = 1;  
@@ -58,7 +59,8 @@ public final class Constants {
     public final static int triggerid = 8;
     public final static int shooterMaster = 9;
     public final static int shooterSlave = 10; 
-    public final static int shooterAngle = 11;
+    public final static int shooterAngle = 11; 
+    public final static int feederBelt = 17;
 
     public final static int leftScissor = 12;
     public final static int rightScissor = 13;
@@ -99,7 +101,7 @@ public final class Constants {
     } 
 
      //TrajectoryDrive constants
-    public static final double kTrackwidthMeters = 0.5461;
+    public static final double kTrackwidthMeters = Units.feetToMeters(1.58);
     public static final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(kTrackwidthMeters);
 	public static final double maxVelocity = 1;
 	public static final double maxAcceleration = 0.5;

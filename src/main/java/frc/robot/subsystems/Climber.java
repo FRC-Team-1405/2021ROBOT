@@ -8,6 +8,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import frc.robot.Constants;
@@ -29,6 +30,31 @@ public class Climber extends SubsystemBase {
   public boolean enabled = false; 
    public int leftTargetPosition = 0;
   public int rightTargetPosition = 0;
+  private static final double ZEROIZE_SPEED = -0.4;
+
+  private enum Zeroize {
+    Initialize{
+      public Zeroize execute(TalonSRX motor) {
+        motor.set(ControlMode.PercentOutput, ZEROIZE_SPEED);
+        return Zeroize;
+      };
+    },
+    Zeroize{
+      public Zeroize execute(TalonSRX motor) {
+        if (motor.isRevLimitSwitchClosed() == 1){
+          motor.set(ControlMode.PercentOutput, 0);
+          return Ready;
+        }
+        return this;
+      };
+    },
+    Ready{
+      public Zeroize execute(TalonSRX motor) {
+        return this;
+      };
+    };
+    public abstract Zeroize execute(TalonSRX motor);
+  };
 
   public Climber() {
     SmartDashboard.putBoolean("Climb Enabled", enabled); 
@@ -41,8 +67,8 @@ public class Climber extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     //SmartDashboard.putBoolean("Climber Sensor Reading", leftFrontSwitch.get()); 
-    leftZeroize.periodic();
-    rightZeroize.periodic();
+    leftZeroize = leftZeroize.execute(leftClimbMotor);
+    rightZeroize = rightZeroize.execute(rightClimbMotor);
   } 
 
   public boolean  climbInPosition(){
@@ -65,6 +91,9 @@ public class Climber extends SubsystemBase {
   }
 
   public void directControl(double left, double right){
+    if (leftZeroize != Zeroize.Ready || rightZeroize != Zeroize.Ready)
+      return ;
+
     if(enabled){
       leftClimbMotor.set(ControlMode.PercentOutput, left);
       rightClimbMotor.set(ControlMode.PercentOutput, right);
@@ -72,8 +101,8 @@ public class Climber extends SubsystemBase {
   }
 
   public void moveLeft(double distance){ 
-    if (!leftZeroize.isZeroizeComplete() || !rightZeroize.isZeroizeComplete())
-    return;
+    if (leftZeroize != Zeroize.Ready || rightZeroize != Zeroize.Ready)
+      return ;
      
     if(enabled && climbInPosition_left()){
       leftClimbMotor.set(ControlMode.Position, distance);
@@ -81,8 +110,8 @@ public class Climber extends SubsystemBase {
   }
 
   public void moveRight(double distance){ 
-    if (!leftZeroize.isZeroizeComplete() || !rightZeroize.isZeroizeComplete())
-    return;
+    if (leftZeroize != Zeroize.Ready || rightZeroize != Zeroize.Ready)
+      return ;
      
     if(enabled && climbInPosition_right()){
       rightClimbMotor.set(ControlMode.Position, distance);
@@ -90,8 +119,8 @@ public class Climber extends SubsystemBase {
   }
   //highest position
   public void reachUp(){  
-    if (!leftZeroize.isZeroizeComplete() || !rightZeroize.isZeroizeComplete())
-    return;
+    if (leftZeroize != Zeroize.Ready || rightZeroize != Zeroize.Ready)
+      return ;
      
     if(enabled){
       int targetPosition = (int)SmartDashboard.getNumber("Climber/Climb Position", reachPosition);
@@ -103,8 +132,8 @@ public class Climber extends SubsystemBase {
   } 
   //45"
   public void reachLow(){   
-    if (!leftZeroize.isZeroizeComplete() || !rightZeroize.isZeroizeComplete())
-    return;
+    if (leftZeroize != Zeroize.Ready || rightZeroize != Zeroize.Ready)
+      return ;
      
     int targetPosition = (int)SmartDashboard.getNumber("Low Position", lowPosition);
     rightClimbMotor.set(ControlMode.MotionMagic, targetPosition); 
@@ -112,7 +141,7 @@ public class Climber extends SubsystemBase {
   }
   //lowest postition
   public void goHome(){
-    if (!leftZeroize.isZeroizeComplete() || !rightZeroize.isZeroizeComplete())
+    if (leftZeroize != Zeroize.Ready || rightZeroize != Zeroize.Ready)
       return ;
 
     int targetPosition = (int)SmartDashboard.getNumber("Home Position", homePosition);
@@ -120,39 +149,12 @@ public class Climber extends SubsystemBase {
     rightClimbMotor.set(ControlMode.MotionMagic, targetPosition);
   } 
 
-  private class ZeroizeState{
-    ZeroizeState(WPI_TalonSRX motor){
-      this.motor = motor;
-    }
-    public void periodic(){
-      if (!zeroizeActive) {
-        if (motor.isRevLimitSwitchClosed() == 1){
-          motor.set(ControlMode.PercentOutput, 0);
-          zeroizeActive = false;
-          zeroizeComplete = true;
-        }
-      }
-    }
-    public void zeroize(){
-      if (!zeroizeActive){
-        zeroizeActive = true;
-        motor.set(ControlMode.PercentOutput, 0.25); 
-      } 
-    }
-    public boolean isZeroizeComplete(){
-      return zeroizeComplete;
-    }
-    private boolean zeroizeActive = false; 
-    private boolean zeroizeComplete = false; 
-    private WPI_TalonSRX motor;
-  }
-
-  private ZeroizeState leftZeroize = new ZeroizeState(leftClimbMotor);
-  private ZeroizeState rightZeroize = new ZeroizeState(rightClimbMotor);
+  private Zeroize leftZeroize = Zeroize.Initialize;
+  private Zeroize rightZeroize = Zeroize.Initialize;
 
   public void zeroize(){ 
-    leftZeroize.zeroize();
-    rightZeroize.zeroize();
+    leftZeroize = Zeroize.Initialize;
+    rightZeroize = Zeroize.Initialize;
   } 
 
   // get lengths in meters

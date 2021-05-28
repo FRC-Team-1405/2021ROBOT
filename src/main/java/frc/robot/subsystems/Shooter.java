@@ -15,6 +15,7 @@ import frc.robot.Constants;
 public class Shooter extends SubsystemBase {
   TalonSRX master = new TalonSRX(Constants.shooterMaster);
   TalonSRX slave = new TalonSRX(Constants.shooterSlave); 
+  TalonSRX feederBelt = new TalonSRX(Constants.feederBelt); 
 
   Servo trigger = new Servo(0); 
   
@@ -55,9 +56,11 @@ public class Shooter extends SubsystemBase {
 
   public void index(){ 
     trigger.set(0.2); 
+    feederBelt.set(ControlMode.PercentOutput, 0.75);
   } 
 
   public void close(){ 
     trigger.set(0.4); 
+    feederBelt.set(ControlMode.PercentOutput, 0.0);
   } 
 }

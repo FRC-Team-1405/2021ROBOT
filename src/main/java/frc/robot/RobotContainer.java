@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 import java.util.logging.Logger;
 
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -107,7 +108,7 @@ public class RobotContainer {
     swerveDriveBase.zeroGyro();
 
 
-    var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); } );
+    var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); }, hood );
     hoodControl.withName("Dynamic Hood Control");
     hood.setDefaultCommand( hoodControl );
 /*
@@ -166,6 +167,8 @@ public class RobotContainer {
   SendableChooser<Integer> autoSelector; 
    
   private void initShuffleBoard(){
+    boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
+
     autoSelector = new SendableChooser<Integer>();
     autoSelector.addOption("Do nothing", 0);
     autoSelector.addOption("Drive forward.", 1);
@@ -247,6 +250,23 @@ public class RobotContainer {
       targetCamera.withName("Camera Target");
       testCommandsTab.add( targetCamera );
       
+      // Test turn to angle by turning to zero
+      double robotAngle = swerveDriveBase.getPose().getRotation().getDegrees();
+      SmartDashboard.putNumber("Test Turn Sensor", robotAngle);
+      DoubleSupplier returnZero = () -> { return 0.0; };
+      DoubleSupplier testAngleTarget = () -> { 
+        double sensor = swerveDriveBase.getPose().getRotation().getDegrees();
+        SmartDashboard.putNumber("Test Turn Sensor", sensor);
+        return sensor;
+      };
+      var turnToAngle = new DriveByAngle( returnZero, 
+                              returnZero, 
+                              isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
+                              testAngleTarget, 
+                              swerveDriveBase);
+      turnToAngle.withName("Test Turn");
+      testCommandsTab.add( turnToAngle );
+
       // RunCommand readDistance = new RunCommand(lidar::readDistance);
       // readDistance.setName("Read_Distance");
       // testCommandsTab.add(readDistance);

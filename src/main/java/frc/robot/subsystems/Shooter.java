@@ -24,7 +24,8 @@ public class Shooter extends SubsystemBase {
   int targetVelocity = 0;
 
   public Shooter(){    
-    slave.setInverted(true);
+    master.setInverted(true);
+    slave.setInverted(false);
     slave.follow(master);  
     close();
   }

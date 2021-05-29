@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.Preferences;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
@@ -47,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import frc.robot.subsystems.Hood;
+import frc.robot.subsystems.Intake;
 import frc.robot.commands.DriveByAngle;
 import frc.robot.commands.ShootContinous;
 import frc.robot.commands.SwerveDrive;
@@ -63,7 +64,6 @@ import frc.robot.sensors.LidarLitePWM;
 import frc.robot.sensors.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SwerveDriveBase;
-import frc.robot.subsystems.SwerveIntake;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -79,12 +79,12 @@ public class RobotContainer {
 
   // private final ArcadeDrive driveBase = new ArcadeDrive();
   public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase(); 
-  public final SwerveIntake intake = new SwerveIntake(); 
   private Limelight limelight = new Limelight(new Limelight.Position(35.58, 14.29));
 
   private XboxController driver = new XboxController(Constants.pilot); 
   private XboxController operator = new XboxController(Constants.operator); 
   
+  private Intake intake = new Intake(); 
   private Shooter shooter = new Shooter(); 
   private Hood hood = new Hood(); 
   private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(8));
@@ -299,7 +299,7 @@ public class RobotContainer {
       // testCommandsTab.add(toggleClimbLimits);
     }
 
-    //  SmartDashboard.putData( new PowerDistributionPanel(Constants.PDP) );
+    SmartDashboard.putData( new PowerDistributionPanel(Constants.PDP) );
   }
 
   
@@ -336,13 +336,13 @@ public class RobotContainer {
                                                         swerveDriveBase) ); 
 
     new JoystickButton(driver, XboxController.Button.kBumperRight.value) 
-          .whenPressed(new InstantCommand(intake::intake, intake)) 
-          .whenReleased(new InstantCommand(intake::stop, intake)); 
+          .whenPressed(new InstantCommand(intake::enable, intake)) 
+          .whenReleased(new InstantCommand(intake::disable, intake)); 
     
     SmartDashboard.putBoolean("Intake Deployed", false);
     new JoystickButton(driver, XboxController.Button.kBumperLeft.value) 
-          .toggleWhenPressed(new StartEndCommand( () -> SmartDashboard.putBoolean("Intake Deployed", true),
-                                                  () -> SmartDashboard.putBoolean("Intake Deployed", false),
+          .toggleWhenPressed(new StartEndCommand( intake::deploy,
+                                                  intake::retract,
                                                   intake));
 
     new JoystickButton(driver, XboxController.Button.kStickRight.value) 
@@ -662,9 +662,9 @@ return new SequentialCommandGroup(
     ), 
     new Pose2d(0, Units.feetToMeters(25 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
 
- return new SequentialCommandGroup(new InstantCommand(intake::intake, intake), 
+ return new SequentialCommandGroup(new InstantCommand(intake::enable, intake), 
  runTrajecotory(trajectory), 
- new InstantCommand(intake::stop, intake)); 
+ new InstantCommand(intake::disable, intake)); 
 //return runTrajecotory(trajectory); 
 } 
 
@@ -686,9 +686,9 @@ private Command galacticSearchPathBRed(){
     ), 
     new Pose2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(25 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
 
- return new SequentialCommandGroup(new InstantCommand(intake::intake, intake), 
+ return new SequentialCommandGroup(new InstantCommand(intake::enable, intake), 
  runTrajecotory(trajectory), 
- new InstantCommand(intake::stop, intake)); 
+ new InstantCommand(intake::disable, intake)); 
 //return runTrajecotory(trajectory); 
 } 
 

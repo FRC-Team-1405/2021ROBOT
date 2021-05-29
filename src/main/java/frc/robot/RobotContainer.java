@@ -52,6 +52,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.commands.DriveByAngle;
 import frc.robot.commands.ShootContinous;
 import frc.robot.commands.SwerveDrive;
+import frc.robot.commands.TurnToAngle;
 import frc.robot.commands.ZeroizeOdometry;
 import frc.robot.commands.ZeroizeSwerveModules;
 import frc.robot.lib.CustomPIDController;
@@ -500,14 +501,14 @@ public class RobotContainer {
           Map.ofEntries(
               Map.entry(0, new PrintCommand("Do nothing")),
               //Map.entry(1, auto1),
-              //Map.entry(2, auto2),
+              Map.entry(2, shootThenDrive()),
               Map.entry(3, getSwerveAutoTest()), 
               Map.entry(4, slalom()), 
               Map.entry(5, waypointSlalom()), 
               Map.entry(6, Barrel()), 
               Map.entry(7, galacticSearchPathARed()), 
               Map.entry(8, galacticSearchPathBRed()), 
-              Map.entry(9, bounce()) 
+              Map.entry(9, bounce())
           ),
           this::select
       );
@@ -596,6 +597,30 @@ return new SequentialCommandGroup(
 
     return runTrajecotory(exampleTrajectory); 
   } 
+
+  private Command shootThenDrive(){
+    TrajectoryConfig config = new TrajectoryConfig(Constants.SwerveBase.maxSpeed, Constants.SwerveBase.maxAcceleration)
+                                    .setKinematics(swerveDriveBase.getKinematics());
+      // An example trajectory to follow. All units in meters.
+    Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
+                                new Pose2d(0, 0, new Rotation2d(0)),
+                                List.of(new Translation2d(Units.feetToMeters(-2.5 * Constants.VelocityConversions.ScaleFactor), 0), 
+                                        new Translation2d(Units.feetToMeters(-5.0 * Constants.VelocityConversions.ScaleFactor), 0)),   
+                                new Pose2d(Units.feetToMeters(5.0 * Constants.VelocityConversions.ScaleFactor), 0, new Rotation2d(0)),
+                                config); 
+
+    DoubleSupplier zeroSupplier = () -> { return 0.0; };
+    DoubleSupplier speedLimitSupplier = () -> { return speedLimit; } ;
+
+    return new TurnToAngle(zeroSupplier, zeroSupplier, speedLimitSupplier, this::angleToTarget, swerveDriveBase).withTimeout(5)
+              .andThen( new ShootContinous(shooter,
+                                           hood, 
+                                           () -> { return DistanceToPower.calculate(distanceToTarget());}, 
+                                           () -> { return DistanceToAngle.calculate(distanceToTarget());},
+                                           limelight,
+                                           true).withTimeout(5) )
+              .andThen( runTrajecotory(trajectory) );
+  }
 
   private Command slalom(){ 
     String trajectoryJSON = "paths/Slalom.wpilib.json";

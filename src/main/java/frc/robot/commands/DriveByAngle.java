@@ -37,7 +37,7 @@ public class DriveByAngle extends PIDCommand {
     // Configure additional PID options by calling `getController` here.
   }
 
-  private DoubleSupplier sensor;
+  protected DoubleSupplier sensor;
 
   // Returns true when the command should end.
   @Override

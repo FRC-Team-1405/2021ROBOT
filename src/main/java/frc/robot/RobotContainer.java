@@ -106,21 +106,8 @@ public class RobotContainer {
     swerveDriveBase.zeroAzimuthEncoders();
     swerveDriveBase.zeroGyro();
 
-    // Configure default commands
-    var hoodControl = new FunctionalCommand(
-                                  () -> {
-                                    if (!hood.zeroizeComplete()){
-                                      hood.zeroize();
-                                    }
-                                  },
-                                  () -> {
-                                    if (hood.zeroizeComplete()){
-                                      hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget()));
-                                    }
-                                  },
-                                  (interupted) -> { hood.stop(); },
-                                  () -> { return false; },
-                                  hood);
+
+    var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); } );
     hoodControl.withName("Dynamic Hood Control");
     hood.setDefaultCommand( hoodControl );
 /*

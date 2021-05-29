@@ -364,7 +364,7 @@ public class RobotContainer {
           .whileHeld( new DriveByAngle( this::getForwardSwerve,
                                         this::getStrafeSwerve,
                                         isLogitech ? this::getStrafeSwerve : this::getSpeedLimitXboxController,
-                                        this::angle_180,
+                                        this.angleToDeltaAngle(180.0),
                                         swerveDriveBase) );
   }; 
   
@@ -430,9 +430,19 @@ public class RobotContainer {
                                       )); 
   }
 
-  private double angle_180(){
-    double robotAngle = swerveDriveBase.getPose().getRotation().getDegrees(); 
-    return Math.IEEEremainder(robotAngle+180.0, 360.0);
+  private DoubleSupplier angleToDeltaAngle(double deltaAngle){
+    double targetAngle = swerveDriveBase.getPose().getRotation().getDegrees()+deltaAngle; 
+    return () -> { 
+      double robotAngle = swerveDriveBase.getPose().getRotation().getDegrees(); 
+      return Math.IEEEremainder(robotAngle-targetAngle, 360.0);
+    };
+  }
+
+  private DoubleSupplier angleToFieldAngle(double fieldAngle){
+    return () -> { 
+      double robotAngle = swerveDriveBase.getPose().getRotation().getDegrees(); 
+      return Math.IEEEremainder(robotAngle-fieldAngle, 360.0);
+    };
   }
 
   private double angleToTarget(){

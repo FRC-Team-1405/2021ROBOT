@@ -253,17 +253,11 @@ public class RobotContainer {
       
       // Test turn to angle by turning to zero
       double robotAngle = swerveDriveBase.getPose().getRotation().getDegrees();
-      SmartDashboard.putNumber("Test Turn Sensor", robotAngle);
       DoubleSupplier returnZero = () -> { return 0.0; };
-      DoubleSupplier testAngleTarget = () -> { 
-        double sensor = swerveDriveBase.getPose().getRotation().getDegrees();
-        SmartDashboard.putNumber("Test Turn Sensor", sensor);
-        return sensor;
-      };
       var turnToAngle = new DriveByAngle( returnZero, 
                               returnZero, 
                               isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
-                              testAngleTarget, 
+                              angleToFieldAngle(0.0), 
                               swerveDriveBase);
       turnToAngle.withName("Test Turn");
       testCommandsTab.add( turnToAngle );
@@ -376,7 +370,7 @@ public class RobotContainer {
      * +A: sample distance once then shoot
      * +B: shoot from the trench
      * +X: shoot to the trench
-     * +Y: sampel distance continous and shoot
+     * +Y: sample distance continuos and shoot
      * +Left trigger: 
      * +Right trigger: 
      * +D-pad up: 

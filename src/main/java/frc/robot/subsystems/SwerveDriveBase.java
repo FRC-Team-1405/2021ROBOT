@@ -54,7 +54,7 @@ public class SwerveDriveBase extends SubsystemBase {
   public void zeroGyro() {
     AHRS gyro = swerve.getGyro();
     gyro.setAngleAdjustment(0);
-    double adj = (gyro.getAngle() % 360) + SwerveDriveConfig.gyroHardwareOffset;
+    double adj = (-gyro.getAngle() % 360) + SwerveDriveConfig.gyroHardwareOffset;
     gyro.setAngleAdjustment(-adj);
   } 
 

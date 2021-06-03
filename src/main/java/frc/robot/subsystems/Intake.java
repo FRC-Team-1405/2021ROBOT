@@ -11,7 +11,9 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -21,11 +23,13 @@ public class Intake extends SubsystemBase {
    */
 
   private WPI_TalonSRX intakeTalon = new WPI_TalonSRX(Constants.intakeTalon); 
-  private Solenoid intakeDeploy = new Solenoid(Constants.intakeDeploy); 
+  private DoubleSolenoid intakeDeployLeft = new DoubleSolenoid(0, 1); 
+  private DoubleSolenoid intakeDeployRight = new DoubleSolenoid(2, 3); 
 
   public Intake() {
     intakeTalon.set(ControlMode.PercentOutput, 0);
-    intakeDeploy.set(false);
+    intakeDeployLeft.set(Value.kReverse);
+    intakeDeployRight.set(Value.kReverse);
   }
 
   @Override
@@ -34,11 +38,13 @@ public class Intake extends SubsystemBase {
   }
 
   public void deploy(){ 
-    intakeDeploy.set(true);
+    intakeDeployLeft.set(Value.kForward);
+    intakeDeployRight.set(Value.kForward);
   } 
 
   public void retract(){
-    intakeDeploy.set(false);
+    intakeDeployLeft.set(Value.kReverse);
+    intakeDeployRight.set(Value.kReverse);
   } 
 
   public void enable(){

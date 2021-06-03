@@ -27,6 +27,7 @@ public class Climber extends SubsystemBase {
   public double reachPosition = 190000; 
   public double lowPosition   =  35000; 
   public double homePosition = 100;
+  public double moveRange = 1000;
   public boolean enabled = false; 
    public int leftTargetPosition = 0;
   public int rightTargetPosition = 0;
@@ -105,7 +106,8 @@ public class Climber extends SubsystemBase {
       return ;
      
     if(enabled && climbInPosition_left()){
-      leftClimbMotor.set(ControlMode.Position, distance);
+      int target = leftClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
+      leftClimbMotor.set(ControlMode.Position, target);
     }
   }
 
@@ -114,7 +116,8 @@ public class Climber extends SubsystemBase {
       return ;
      
     if(enabled && climbInPosition_right()){
-      rightClimbMotor.set(ControlMode.Position, distance);
+      int target = rightClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
+      rightClimbMotor.set(ControlMode.Position, target);
     }
   }
   //highest position
@@ -149,8 +152,8 @@ public class Climber extends SubsystemBase {
     rightClimbMotor.set(ControlMode.MotionMagic, targetPosition);
   } 
 
-  private Zeroize leftZeroize = Zeroize.Initialize;
-  private Zeroize rightZeroize = Zeroize.Initialize;
+  private Zeroize leftZeroize = Zeroize.Ready;  // disable auto zeroize
+  private Zeroize rightZeroize = Zeroize.Ready; // disable auto zeroize
 
   public void zeroize(){ 
     leftZeroize = Zeroize.Initialize;

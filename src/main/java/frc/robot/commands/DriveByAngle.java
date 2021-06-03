@@ -26,6 +26,7 @@ public class DriveByAngle extends PIDCommand {
         () -> 0,
         // This uses the output
         output -> {
+          SmartDashboard.putNumber("DriveByAngle output", output);
           drive.drive(forward.getAsDouble(), strafe.getAsDouble(), -output, speedLimit.getAsDouble());
         });
 

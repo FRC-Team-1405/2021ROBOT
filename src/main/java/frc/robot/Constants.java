@@ -54,7 +54,6 @@ public final class Constants {
     }
 
     public final static int intakeTalon = 5;
-    public final static int intakeDeploy = 6;
     public final static int indexerid = 7;
     public final static int triggerid = 8;
     public final static int shooterMaster = 9;

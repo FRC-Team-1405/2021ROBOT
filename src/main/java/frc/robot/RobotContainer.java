@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -47,6 +48,7 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Intake;
 import frc.robot.commands.DriveByAngle;
@@ -89,6 +91,7 @@ public class RobotContainer {
   private Intake intake = new Intake(); 
   private Shooter shooter = new Shooter(); 
   private Hood hood = new Hood(); 
+  private Climber climber = new Climber();
   private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(8));
 
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
@@ -100,6 +103,7 @@ public class RobotContainer {
     // Configure the button bindings
     configureDriverButtonBindings(); 
     configureOperatorButtonBindings(); 
+    configureDemoButtonBindings();
     initShuffleBoard();
     limelight.setPipeline((byte) 0);
     limelight.setLED(Limelight.LED.Off); 
@@ -108,10 +112,10 @@ public class RobotContainer {
     swerveDriveBase.zeroAzimuthEncoders();
     swerveDriveBase.zeroGyro();
 
-
     var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); }, hood );
     hoodControl.withName("Dynamic Hood Control");
     hood.setDefaultCommand( hoodControl );
+
 /*
     switch(joystickSelector.getSelected()){
       case "Logitech":
@@ -318,10 +322,10 @@ public class RobotContainer {
      * +Left joystick: swerve forward/reverse
      * +Right joystick: swerve left/right
      * +Right joystick press: face target
-     * +A: 
-     * +B: 
-     * +X: turn 180
-     * +Y: 
+     * +A: Climber to Home position
+     * +B: turn 180
+     * +X: Climber to Climb position
+     * +Y: Climber to Grab position
      * +Right bumper: intake
      * +Left bumper: intake deploy/retract
      * +Right trigger: increase shooter distance
@@ -330,6 +334,7 @@ public class RobotContainer {
      * +D-pad down: 
      * +D-pad left:
      * +D-pad right:
+     * +Start & Back: lock | unlock climb controls 
      */
     swerveDriveBase.setDefaultCommand( new SwerveDrive( this::getForwardSwerve, 
                                                         this::getStrafeSwerve, 
@@ -354,13 +359,41 @@ public class RobotContainer {
                                         this::angleToTarget, 
                                         swerveDriveBase) );
                         
-    new JoystickButton(driver, XboxController.Button.kA.value)
+    new JoystickButton(driver, XboxController.Button.kB.value)
           .whileHeld( new DriveByAngle( this::getForwardSwerve,
                                         this::getStrafeSwerve,
                                         isLogitech ? this::getStrafeSwerve : this::getSpeedLimitXboxController,
                                         this.angleToDeltaAngle(180.0),
                                         swerveDriveBase) );
-  }; 
+
+    // lock / unlock the climb controls
+    new JoystickButton(driver, XboxController.Button.kBack.value)
+      .and( new JoystickButton(driver, XboxController.Button.kStart.value) )
+      .whenActive( new InstantCommand( () -> {
+        climber.toggleEnable();
+      }));
+
+    new JoystickButton(driver, XboxController.Button.kY.value)
+      .whenPressed( new FunctionalCommand( () -> { climber.reachUp(); }, 
+                                           () -> {  }, 
+                                           (interrupted) -> { }, 
+                                           () -> { return climber.climbInPosition(); }, 
+                                           climber));
+
+    new JoystickButton(driver, XboxController.Button.kA.value)
+      .whenPressed( new FunctionalCommand( () -> { climber.goHome(); }, 
+                                           () -> {  }, 
+                                           (interrupted) -> { }, 
+                                           () -> { return climber.climbInPosition(); }, 
+                                           climber));
+
+    new JoystickButton(driver, XboxController.Button.kX.value)
+      .whenPressed( new FunctionalCommand( () -> { climber.reachLow(); }, 
+                                           () -> {  }, 
+                                           (interrupted) -> { }, 
+                                           () -> { return climber.climbInPosition(); }, 
+                                           climber));
+    }; 
   
   private void configureOperatorButtonBindings(){ 
     /**
@@ -379,7 +412,7 @@ public class RobotContainer {
      * +D-pad right: 
      * +Left joystick:
      * +Right joystick:
-     * +Start: 
+     * +Start & Back: lock | unlock climb controls 
      */
     new JoystickButton(driver, XboxController.Button.kBumperLeft.value)
       .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
@@ -422,6 +455,25 @@ public class RobotContainer {
                                       limelight,
                                       true
                                       )); 
+
+    // lock / unlock the climb controls
+    new JoystickButton(operator, XboxController.Button.kBack.value)
+      .and( new JoystickButton(operator, XboxController.Button.kStart.value) )
+      .whenActive( new InstantCommand( () -> {
+        climber.toggleEnable();
+      }));
+  }
+
+  private void configureDemoButtonBindings(){ 
+    XboxController demo = new XboxController(Constants.demoController);
+    new JoystickButton(demo, XboxController.Button.kX.value)
+      .whenPressed( new InstantCommand( () -> {
+        intake.deploy();
+      }));
+    new JoystickButton(demo, XboxController.Button.kB.value)
+      .whenPressed( new InstantCommand( () -> {
+        intake.retract();
+      }));
   }
 
   private DoubleSupplier angleToDeltaAngle(double deltaAngle){

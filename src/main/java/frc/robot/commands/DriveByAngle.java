@@ -27,7 +27,7 @@ public class DriveByAngle extends PIDCommand {
         // This uses the output
         output -> {
           SmartDashboard.putNumber("DriveByAngle output", output);
-          drive.drive(forward.getAsDouble(), strafe.getAsDouble(), -output, speedLimit.getAsDouble());
+          drive.drive(forward.getAsDouble(), strafe.getAsDouble(), output, speedLimit.getAsDouble());
         });
 
       this.sensor = sensor;
@@ -48,7 +48,7 @@ public class DriveByAngle extends PIDCommand {
 
   @Override
   public void execute() {
-    SmartDashboard.putNumber("DriveByAngle sensor", m_controller.getSetpoint());
+    SmartDashboard.putNumber("DriveByAngle Target", m_controller.getSetpoint());
     SmartDashboard.putNumber("DriveByAngle error", m_controller.getPositionError());
     SmartDashboard.putNumber("DriveByAngle sensor", sensor.getAsDouble());
     super.execute();

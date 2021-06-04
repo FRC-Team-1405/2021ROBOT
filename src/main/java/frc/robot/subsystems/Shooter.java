@@ -16,7 +16,7 @@ public class Shooter extends SubsystemBase {
   TalonSRX master = new TalonSRX(Constants.shooterMaster);
   TalonSRX slave = new TalonSRX(Constants.shooterSlave); 
   TalonSRX feederBelt = new TalonSRX(Constants.feederBelt); 
-
+  //Not used 
   Servo trigger = new Servo(0); 
   
   SlewRateLimiter rateLimit = new SlewRateLimiter(10000, 0); 
@@ -55,13 +55,17 @@ public class Shooter extends SubsystemBase {
     master.set(ControlMode.PercentOutput, 0);
   } 
 
-  public void index(){ 
-    trigger.set(0.2); 
-    feederBelt.set(ControlMode.PercentOutput, 0.75);
+  public void index(){  
+    //not used 
+    trigger.set(0.2);  
+    //stops feeder belt
+    feederBelt.set(ControlMode.PercentOutput, 1.0);
   } 
 
   public void close(){ 
+    //not used
     trigger.set(0.4); 
+    //stops feeder belt 
     feederBelt.set(ControlMode.PercentOutput, 0.0);
   } 
 }

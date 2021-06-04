@@ -83,7 +83,7 @@ public class RobotContainer {
 
   // private final ArcadeDrive driveBase = new ArcadeDrive();
   public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase(); 
-  private Limelight limelight = new Limelight(new Limelight.Position(35.58, 14.29));
+  private Limelight limelight = new Limelight(new Limelight.Position(41.91, 30.12));
 
   private XboxController driver = new XboxController(Constants.pilot); 
   private XboxController operator = new XboxController(Constants.operator); 
@@ -114,7 +114,16 @@ public class RobotContainer {
 
     var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); }, hood );
     hoodControl.withName("Dynamic Hood Control");
-    hood.setDefaultCommand( hoodControl );
+    hood.setDefaultCommand( hoodControl ); 
+    
+    var climberControl = new RunCommand( () -> {
+      double left = operator.getY(Hand.kLeft); 
+      double right = operator.getY(Hand.kRight); 
+      climber.moveLeft(left < Math.abs(.35) ? 0 : left); 
+      climber.moveRight(right < Math.abs(.35) ? 0 : right);
+    }, climber); 
+    climberControl.setName("Climber Control"); 
+    climber.setDefaultCommand(climberControl);
 
 /*
     switch(joystickSelector.getSelected()){
@@ -374,24 +383,24 @@ public class RobotContainer {
       }));
 
     new JoystickButton(driver, XboxController.Button.kY.value)
-      .whenPressed( new FunctionalCommand( () -> { climber.reachUp(); }, 
-                                           () -> {  }, 
-                                           (interrupted) -> { }, 
-                                           () -> { return climber.climbInPosition(); }, 
+      .whenHeld( new FunctionalCommand( () -> { climber.reachUp(); }, 
+                                           () -> { climber.reachUp(); }, 
+                                           (interrupted) -> { climber.stop(); }, 
+                                           () -> { return false; }, 
                                            climber));
 
     new JoystickButton(driver, XboxController.Button.kA.value)
-      .whenPressed( new FunctionalCommand( () -> { climber.goHome(); }, 
-                                           () -> {  }, 
-                                           (interrupted) -> { }, 
-                                           () -> { return climber.climbInPosition(); }, 
+      .whenHeld( new FunctionalCommand( () -> { climber.goHome(); }, 
+                                           () -> { climber.goHome(); }, 
+                                           (interrupted) -> { climber.stop(); }, 
+                                           () -> { return false; }, 
                                            climber));
 
     new JoystickButton(driver, XboxController.Button.kX.value)
-      .whenPressed( new FunctionalCommand( () -> { climber.reachLow(); }, 
-                                           () -> {  }, 
-                                           (interrupted) -> { }, 
-                                           () -> { return climber.climbInPosition(); }, 
+      .whenHeld( new FunctionalCommand( () -> { climber.reachLow(); }, 
+                                           () -> { climber.reachLow(); }, 
+                                           (interrupted) -> { climber.stop(); }, 
+                                           () -> { return false; }, 
                                            climber));
     }; 
   

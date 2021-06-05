@@ -209,7 +209,7 @@ public class RobotContainer {
     InstantCommand setPosition;
     setPosition = new InstantCommand(() -> {
                           double distanceMeters = aimingLidar.getDistance()/100.0;
-                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters, -1.0, swerveDriveBase.getPose().getRotation()) );
+                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters,  3.1, swerveDriveBase.getPose().getRotation()) );
                         }) ;
     setPosition.setName("Left");
     autoTab.add( setPosition );
@@ -223,7 +223,7 @@ public class RobotContainer {
 
     setPosition = new InstantCommand(() -> {
                           double distanceMeters = aimingLidar.getDistance()/100.0;
-                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters,  1.0, swerveDriveBase.getPose().getRotation()) );
+                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters, -1.6, swerveDriveBase.getPose().getRotation()) );
                         }) ;
     setPosition.setName("Right");
     autoTab.add( setPosition );

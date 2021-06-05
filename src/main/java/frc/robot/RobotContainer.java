@@ -146,6 +146,10 @@ public class RobotContainer {
     
     SmartDashboard.putBoolean("Lidar Ready", aimingLidar.getDistance() > 0); 
 
+  } 
+
+  public boolean shooterOverrideEnabled(){ 
+    return operator.getBumper(Hand.kRight); 
   }
 
   public double getForwardSwerve() {
@@ -237,7 +241,8 @@ public class RobotContainer {
                                           () -> { return SmartDashboard.getNumber("Shooter/Power",0);}, 
                                           () -> { return SmartDashboard.getNumber("Shooter/Angle",0);},
                                           limelight,
-                                          true
+                                          true, 
+                                          this::shooterOverrideEnabled
                                           );
       testFire.withName("Test Fire"); 
       testCommandsTab.add( testFire );
@@ -407,8 +412,8 @@ public class RobotContainer {
   private void configureOperatorButtonBindings(){ 
     /**
      * Operator:
-     * +Right bumper: 
-     * +Left bumper: shoot now
+     * +Right bumper: shoot now
+     * 
      * +A: sample distance once then shoot
      * +B: shoot from the trench
      * +X: shoot to the trench
@@ -432,7 +437,8 @@ public class RobotContainer {
                                       () -> { return DistanceToPower.calculate(distanceToTarget());}, 
                                       () -> { return DistanceToAngle.calculate(distanceToTarget());},
                                       limelight,
-                                      false
+                                      false, 
+                                      this::shooterOverrideEnabled
                                       )); 
      
     new JoystickButton(operator, XboxController.Button.kY.value)
@@ -441,7 +447,8 @@ public class RobotContainer {
                                       () -> { return DistanceToPower.calculate(distanceToTarget());}, 
                                       () -> { return DistanceToAngle.calculate(distanceToTarget());},
                                       limelight,
-                                      true
+                                      true, 
+                                      this::shooterOverrideEnabled
                                       )); 
 
     // shoot into the trench
@@ -453,7 +460,8 @@ public class RobotContainer {
                                       () -> { return DistanceToPower.calculate(Constants.Hood.LoadingToTrench)+distanceOffset();}, 
                                       () -> { return Constants.Hood.maxAngle;},
                                       limelight,
-                                      true
+                                      true, 
+                                      this::shooterOverrideEnabled
                                       )); 
     // shoot from the trench
     new JoystickButton(operator, XboxController.Button.kB.value)
@@ -462,7 +470,8 @@ public class RobotContainer {
                                       () -> { return DistanceToPower.calculate(Constants.Hood.TrenchToTarget+distanceOffset());}, 
                                       () -> { return DistanceToAngle.calculate(Constants.Hood.TrenchToTarget+distanceOffset());},
                                       limelight,
-                                      true
+                                      true, 
+                                      this::shooterOverrideEnabled
                                       )); 
 
     // lock / unlock the climb controls
@@ -683,7 +692,8 @@ return new SequentialCommandGroup(
                                            () -> { return DistanceToPower.calculate(distanceToTarget());}, 
                                            () -> { return DistanceToAngle.calculate(distanceToTarget());},
                                            limelight,
-                                           true).withTimeout(5) )
+                                           true, 
+                                           this::shooterOverrideEnabled).withTimeout(5) )
               .andThen( runTrajecotory(trajectory) );
   }
 

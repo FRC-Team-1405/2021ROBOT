@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,18 +21,19 @@ public class ShootContinous extends CommandBase {
   private DoubleSupplier angle; 
   private Limelight limelight;
   private boolean isPrepared; 
-  private boolean recalculate;
-
+  private boolean recalculate; 
+  private BooleanSupplier isOveridden; 
   
   /** Creates a new PrepareShooter. */ 
-  public ShootContinous(Shooter shooter, Hood hood, DoubleSupplier speed, DoubleSupplier angle, Limelight limelight, boolean recalculate) {
+  public ShootContinous(Shooter shooter, Hood hood, DoubleSupplier speed, DoubleSupplier angle, Limelight limelight, boolean recalculate, BooleanSupplier isOveridden) {
     // Use addRequirements() here to declare subsystem dependencies. 
     this.shooter = shooter; 
     this.hood = hood; 
     this.speed = speed; 
     this.angle = angle; 
     this.limelight = limelight;
-    this.recalculate = recalculate;
+    this.recalculate = recalculate; 
+    this.isOveridden = isOveridden; 
 
     this.addRequirements(shooter, hood);
   }
@@ -61,7 +63,7 @@ public class ShootContinous extends CommandBase {
 
     isPrepared = shooterReady && hoodReady; 
 
-    if(isPrepared == true){ 
+    if(isPrepared || isOveridden.getAsBoolean()){ 
       shooter.index();
     }else{ 
       shooter.close();

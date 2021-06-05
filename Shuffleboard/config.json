@@ -828,10 +828,11 @@
               "_source0": "network_table:///SmartDashboard/DriveByAngle sensor",
               "_title": "SmartDashboard/DriveByAngle sensor",
               "Graph/Visible time": 30.0,
+              "Graph/X-axis auto scrolling": true,
               "Y-axis/Automatic bounds": true,
               "Y-axis/Upper bound": 1.0,
               "Y-axis/Lower bound": -1.0,
-              "Visible data/SmartDashboard/DriveByAngle sensor": true
+              "Y-axis/Unit": "ul"
             }
           },
           "5,2": {
@@ -844,10 +845,11 @@
               "_source0": "network_table:///SmartDashboard/DriveByAngle output",
               "_title": "SmartDashboard/DriveByAngle output",
               "Graph/Visible time": 30.0,
+              "Graph/X-axis auto scrolling": true,
               "Y-axis/Automatic bounds": true,
               "Y-axis/Upper bound": 1.0,
               "Y-axis/Lower bound": -1.0,
-              "Visible data/SmartDashboard/DriveByAngle output": true
+              "Y-axis/Unit": "ul"
             }
           },
           "5,3": {
@@ -860,10 +862,94 @@
               "_source0": "network_table:///SmartDashboard/DriveByAngle error",
               "_title": "SmartDashboard/DriveByAngle error",
               "Graph/Visible time": 30.0,
+              "Graph/X-axis auto scrolling": true,
               "Y-axis/Automatic bounds": true,
               "Y-axis/Upper bound": 1.0,
               "Y-axis/Lower bound": -1.0,
-              "Visible data/SmartDashboard/DriveByAngle error": true
+              "Y-axis/Unit": "ul"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Tab 6",
+      "autoPopulate": false,
+      "autoPopulatePrefix": "",
+      "widgetPane": {
+        "gridSize": 128.0,
+        "showGrid": true,
+        "hgap": 16.0,
+        "vgap": 16.0,
+        "tiles": {
+          "3,0": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///SmartDashboard/Shooter/Angle",
+              "_title": "/SmartDashboard/Shooter/Angle"
+            }
+          },
+          "3,1": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Text View",
+              "_source0": "network_table:///SmartDashboard/Shooter/Power",
+              "_title": "/SmartDashboard/Shooter/Power"
+            }
+          },
+          "7,0": {
+            "size": [
+              2,
+              2
+            ],
+            "content": {
+              "_type": "Network Table Tree",
+              "_source0": "network_table:///SmartDashboard/Distance",
+              "_title": "SmartDashboard/Distance"
+            }
+          },
+          "5,0": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Toggle Switch",
+              "_source0": "network_table:///Shuffleboard/Test Commands/Test Fire/running",
+              "_title": "Shuffleboard/Test Commands/Test Fire/running"
+            }
+          },
+          "4,0": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Boolean Box",
+              "_source0": "network_table:///SmartDashboard/shooter HoodSet",
+              "_title": "/SmartDashboard/shooter HoodSet",
+              "Colors/Color when true": "#7CFC00FF",
+              "Colors/Color when false": "#8B0000FF"
+            }
+          },
+          "4,1": {
+            "size": [
+              1,
+              1
+            ],
+            "content": {
+              "_type": "Boolean Box",
+              "_source0": "network_table:///SmartDashboard/shooter VelocitySet",
+              "_title": "/SmartDashboard/shooter VelocitySet",
+              "Colors/Color when true": "#7CFC00FF",
+              "Colors/Color when false": "#8B0000FF"
             }
           }
         }

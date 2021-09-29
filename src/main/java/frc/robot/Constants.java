@@ -35,6 +35,11 @@ public final class Constants {
         public final static int azimuthBackLeft = 23;
         public final static int azimuthBackRight = 24; 
 
+        public final static int encoderFrontLeft = 31;
+        public final static int encoderFrontRight = 32;
+        public final static int encoderBackLeft = 33;
+        public final static int encoderBackRight = 34;
+
         public final static Translation2d frontLeftLocation = new Translation2d(Units.feetToMeters(.791), -Units.feetToMeters(1.125));
         public final static Translation2d frontRightLocation = new Translation2d(Units.feetToMeters(.791), -Units.feetToMeters(1.125));
         public final static Translation2d backLeftLocation = new Translation2d(-Units.feetToMeters(.791), Units.feetToMeters(1.125));

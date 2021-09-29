@@ -1,6 +1,10 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.RemoteSensorSource;
+import com.ctre.phoenix.motorcontrol.can.TalonFX;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.sensors.CANCoder;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
@@ -79,20 +83,27 @@ public class SwerveDriveBase extends SubsystemBase {
     // [2] -> rear_left
     // [3] -> rear_right
     Wheel[] wheels = new Wheel[] {
-      createWheel(Constants.SwerveBase.azimuthFrontRight, Constants.SwerveBase.driveFrontRight, Constants.SwerveBase.frontRightLocation),
-      createWheel(Constants.SwerveBase.azimuthFrontLeft, Constants.SwerveBase.driveFrontLeft, Constants.SwerveBase.frontLeftLocation),
-      createWheel(Constants.SwerveBase.azimuthBackLeft, Constants.SwerveBase.driveBackLeft, Constants.SwerveBase.backLeftLocation),
-      createWheel(Constants.SwerveBase.azimuthBackRight, Constants.SwerveBase.driveBackRight, Constants.SwerveBase.backRightLocation)
+      createWheel(Constants.SwerveBase.azimuthFrontRight, Constants.SwerveBase.driveFrontRight, Constants.SwerveBase.encoderFrontRight, Constants.SwerveBase.frontRightLocation),
+      createWheel(Constants.SwerveBase.azimuthFrontLeft, Constants.SwerveBase.driveFrontLeft, Constants.SwerveBase.encoderFrontLeft, Constants.SwerveBase.frontLeftLocation),
+      createWheel(Constants.SwerveBase.azimuthBackLeft, Constants.SwerveBase.driveBackLeft, Constants.SwerveBase.encoderBackLeft, Constants.SwerveBase.backLeftLocation),
+      createWheel(Constants.SwerveBase.azimuthBackRight, Constants.SwerveBase.driveBackRight, Constants.SwerveBase.encoderBackRight, Constants.SwerveBase.backRightLocation)
     };
     
     return wheels;
   }
 
-  private Wheel createWheel(int azimuthId, int driveId, Translation2d position){
-    TalonSRX azimuthTalon = new TalonSRX(azimuthId);
-    TalonSRX driveTalon = new TalonSRX(driveId);
+  private Wheel createWheel(int azimuthId, int driveId, int encoderId, Translation2d position){
+    TalonFX azimuthTalon = new TalonFX(azimuthId);
+    TalonFX driveTalon = new TalonFX(driveId);
+    CANCoder encoder = new CANCoder(encoderId);
 
-    return new Wheel(azimuthTalon, driveTalon, position, DRIVE_SETPOINT_MAX);
+    TalonFXConfiguration allConfigs = new TalonFXConfiguration();
+    azimuthTalon.getAllConfigs(allConfigs);
+    allConfigs.remoteFilter0.remoteSensorSource = RemoteSensorSource.CANCoder;
+    allConfigs.remoteFilter0.remoteSensorDeviceID = encoder.getDeviceID();
+    azimuthTalon.configAllSettings(allConfigs);
+
+    return new Wheel(azimuthTalon, driveTalon, encoder, position, DRIVE_SETPOINT_MAX);
   }  
 
   @Override

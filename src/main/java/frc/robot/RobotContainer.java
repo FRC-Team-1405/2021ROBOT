@@ -68,6 +68,7 @@ import frc.robot.sensors.LidarLitePWM;
 import frc.robot.sensors.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SwerveDriveBase;
+import frc.robot.subsystems.SwerveModule;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -93,6 +94,8 @@ public class RobotContainer {
   private Hood hood = new Hood(); 
   private Climber climber = new Climber();
   private LidarLitePWM aimingLidar = new LidarLitePWM(new DigitalInput(8));
+
+  public SwerveModule frontRightSwerveModule = new SwerveModule("Swerve Test", Constants.SwerveBase.encoderFrontRight, Constants.SwerveBase.driveFrontRight);
 
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
 

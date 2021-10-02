@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -23,7 +24,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
  * the package after creating this project, you must also update the build.gradle file in the
  * project.
- */
+- */
 public class Robot extends TimedRobot {
   private static final Logger logger = Logger.getLogger(Robot.class.getName());
   private Command m_autonomousCommand;
@@ -62,6 +63,7 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledPeriodic() {
     CommandScheduler.getInstance().run();
+    m_robotContainer.frontRightSwerveModule.display();
   }
 
   /**
@@ -106,6 +108,7 @@ public class Robot extends TimedRobot {
   /**
    * This function is called periodically during operator control.
    */
+  int count = 0;
   @Override
   public void teleopPeriodic() {
   }

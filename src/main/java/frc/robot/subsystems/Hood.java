@@ -78,7 +78,7 @@ public class Hood extends SubsystemBase {
     if (zeroizeState != Zeroize.Ready)
       return 0;
 
-      int position = angle.getSelectedSensorPosition(); 
+      int position = (int) angle.getSelectedSensorPosition(); 
     return position;
   };
 

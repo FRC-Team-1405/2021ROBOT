@@ -40,7 +40,7 @@ public class Shooter extends SubsystemBase {
   }
 
   public int getVelocity(){
-    return (int)master.getClosedLoopTarget() - master.getClosedLoopError();
+    return (int) (master.getClosedLoopTarget() - master.getClosedLoopError());
   }
   public boolean isAtVelocity(){
     return master.getClosedLoopTarget() == targetVelocity && Math.abs(master.getClosedLoopError()) <= Constants.ShooterConstants.acceptableError;

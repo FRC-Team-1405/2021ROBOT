@@ -158,12 +158,12 @@ public class RobotContainer {
 
   /** Left stick Y (left-right) axis. */
   public double getStrafeSwerve() {
-    return driver.getX(Hand.kLeft);
+    return -driver.getX(Hand.kLeft);
   } 
 
   /** Right stick Y (left-right) axis. */
   public double getYawSwerveXboxController() {
-    return driver.getX(Hand.kRight); 
+    return -driver.getX(Hand.kRight); 
   }  
 
   public double getYawSwerveLogitech() { 

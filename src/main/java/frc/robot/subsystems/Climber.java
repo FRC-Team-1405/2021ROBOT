@@ -107,7 +107,7 @@ public class Climber extends SubsystemBase {
       return ;
      
     if(enabled && climbInPosition_left()){
-      int target = leftClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
+      int target = (int) leftClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
       leftClimbMotor.set(ControlMode.Position, target);
     }
   }
@@ -117,7 +117,7 @@ public class Climber extends SubsystemBase {
       return ;
      
     if(enabled && climbInPosition_right()){
-      int target = rightClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
+      int target = (int) rightClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
       rightClimbMotor.set(ControlMode.Position, target);
     }
   }

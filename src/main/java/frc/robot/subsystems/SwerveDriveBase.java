@@ -77,16 +77,12 @@ public class SwerveDriveBase extends SubsystemBase {
   }
 
   private Wheel[] getWheels() {
-    // wheels should be created in the array as
-    // [0] -> front_right
-    // [1] -> front_left
-    // [2] -> rear_left
-    // [3] -> rear_right
     Wheel[] wheels = new Wheel[] {
       createWheel(Constants.SwerveBase.azimuthFrontRight, Constants.SwerveBase.driveFrontRight, Constants.SwerveBase.encoderFrontRight, Constants.SwerveBase.frontRightLocation),
       createWheel(Constants.SwerveBase.azimuthFrontLeft, Constants.SwerveBase.driveFrontLeft, Constants.SwerveBase.encoderFrontLeft, Constants.SwerveBase.frontLeftLocation),
-      createWheel(Constants.SwerveBase.azimuthBackLeft, Constants.SwerveBase.driveBackLeft, Constants.SwerveBase.encoderBackLeft, Constants.SwerveBase.backLeftLocation),
-      createWheel(Constants.SwerveBase.azimuthBackRight, Constants.SwerveBase.driveBackRight, Constants.SwerveBase.encoderBackRight, Constants.SwerveBase.backRightLocation)
+      createWheel(Constants.SwerveBase.azimuthBackRight, Constants.SwerveBase.driveBackRight, Constants.SwerveBase.encoderBackRight, Constants.SwerveBase.backRightLocation),
+      createWheel(Constants.SwerveBase.azimuthBackLeft, Constants.SwerveBase.driveBackLeft, Constants.SwerveBase.encoderBackLeft, Constants.SwerveBase.backLeftLocation)
+      
     };
     
     return wheels;
@@ -96,12 +92,6 @@ public class SwerveDriveBase extends SubsystemBase {
     TalonFX azimuthTalon = new TalonFX(azimuthId);
     TalonFX driveTalon = new TalonFX(driveId);
     CANCoder encoder = new CANCoder(encoderId);
-
-    TalonFXConfiguration allConfigs = new TalonFXConfiguration();
-    azimuthTalon.getAllConfigs(allConfigs);
-    allConfigs.remoteFilter0.remoteSensorSource = RemoteSensorSource.CANCoder;
-    allConfigs.remoteFilter0.remoteSensorDeviceID = encoder.getDeviceID();
-    azimuthTalon.configAllSettings(allConfigs);
 
     return new Wheel(azimuthTalon, driveTalon, encoder, position, DRIVE_SETPOINT_MAX);
   }  

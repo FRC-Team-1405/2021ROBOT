@@ -154,7 +154,7 @@ public class Wheel {
    */
   public void stop() {
     azimuthTalon.set(MotionMagic, azimuthTalon.getSelectedSensorPosition(0)); 
-    logger.config(String.format("----Stop----Set---- %d", azimuthTalon.getSelectedSensorPosition()));  
+    logger.config(String.format("----Stop----Set---- %d", (int)azimuthTalon.getSelectedSensorPosition()));  
     driver.accept(0d);
   }
 

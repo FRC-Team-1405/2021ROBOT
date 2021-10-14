@@ -570,7 +570,7 @@ public class RobotContainer {
   // An example selector method for the selectcommand.  Returns the selector that will select
   // which command to run.  Can base this choice on logical conditions evaluated at runtime.
   
-  private int select() { 
+  private int autoSelect() { 
     return (int) autoSelector.getSelected();
   }
 
@@ -593,7 +593,7 @@ public class RobotContainer {
               Map.entry(8, galacticSearchPathBRed()), 
               Map.entry(9, bounce())
           ),
-          this::select
+          this::autoSelect
       );
 
   /**

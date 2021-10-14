@@ -574,6 +574,10 @@ public class RobotContainer {
     return (int) autoSelector.getSelected();
   }
 
+  private int locationSelect() {
+    return (int) locationSelector.getSelected();
+  }
+
   // An example selectcommand.  Will select from the three commands based on the value returned
   // by the selector method at runtime.  Note that selectcommand works on Object(), so the
   // selector does not have to be an enum; it could be any desired type (string, integer,

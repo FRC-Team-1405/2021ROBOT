@@ -14,7 +14,6 @@ import frc.robot.Constants;
 
 public class Shooter extends SubsystemBase {
   TalonSRX master = new TalonSRX(Constants.shooterMaster);
-  TalonSRX slave = new TalonSRX(Constants.shooterSlave); 
   TalonSRX feederBelt = new TalonSRX(Constants.feederBelt); 
   //Not used 
   Servo trigger = new Servo(0); 
@@ -25,8 +24,6 @@ public class Shooter extends SubsystemBase {
 
   public Shooter(){    
     master.setInverted(true);
-    slave.setInverted(false);
-    slave.follow(master);  
     close();
   }
 

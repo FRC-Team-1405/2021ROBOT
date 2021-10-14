@@ -57,7 +57,6 @@ public final class Constants {
     public final static int indexerid = 7;
     public final static int triggerid = 8;
     public final static int shooterMaster = 9;
-    public final static int shooterSlave = 10; 
     public final static int shooterAngle = 11; 
     public final static int feederBelt = 17;
 

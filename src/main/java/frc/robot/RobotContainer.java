@@ -97,6 +97,21 @@ public class RobotContainer {
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
 
   /**
+   * Enum containing all potential starting positions for the robot.
+   */
+  private enum StartingLocation {
+    LEFT(3.1),
+    CENTER(0.0),
+    RIGHT(-1.6);
+
+    private final double value;
+
+    StartingLocation(final double value) {
+      this.value = value;
+    }
+  }
+
+  /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {

@@ -183,6 +183,7 @@ public class RobotContainer {
   }
 
   SendableChooser<Integer> autoSelector; 
+  SendableChooser<Integer> locationSelector;
    
   private void initShuffleBoard(){
     boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
@@ -199,12 +200,20 @@ public class RobotContainer {
     autoSelector.addOption("Search Path B Red", 8); 
     autoSelector.addOption("Bounce", 9);
     autoSelector.setDefaultOption("Do nothing", 0); 
+
+    locationSelector = new SendableChooser<Integer>();
+    locationSelector.addOption("Left", 0);
+    locationSelector.addOption("Center", 1);
+    locationSelector.addOption("Right", 2);
+    locationSelector.setDefaultOption("Center", 1);
     
     ShuffleboardTab autoTab = Shuffleboard.getTab("Auto") ;
     autoTab.add(autoSelector)
             .withWidget(BuiltInWidgets.kComboBoxChooser);
     SmartDashboard.putNumber("Auto/Selected_Auto", 1);
     autoTab.add("Auto/Initial_Delay", 0); 
+
+    autoTab.add("Location", locationSelector).withWidget(BuiltInWidgets.kComboBoxChooser);
 
     InstantCommand setPosition;
     setPosition = new InstantCommand(() -> {

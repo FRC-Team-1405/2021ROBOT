@@ -615,6 +615,16 @@ public class RobotContainer {
           this::autoSelect
       );
 
+  private final Command locationCommand =
+      new SelectCommand(
+          Map.ofEntries(
+              Map.entry(0, setStartingLocation(StartingLocation.LEFT)),
+              Map.entry(1, setStartingLocation(StartingLocation.CENTER)),
+              Map.entry(2, setStartingLocation(StartingLocation.RIGHT))
+          ),
+          this::locationSelect
+      );
+
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *

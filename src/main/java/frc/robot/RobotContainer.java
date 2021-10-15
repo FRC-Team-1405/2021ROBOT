@@ -895,6 +895,15 @@ return runTrajecotory(trajectory);
   }
 
   /**
+   * Retrieves the location command to use in the main {@link Robot} class.
+   *
+   * @return Command to run in autonomous.
+   */
+  public Command getLocationCommand() {
+    return locationCommand;
+  }
+
+  /**
    * Set starting location for the robot in autonomous.
    * 
    * @param startingLocation  Starting location of the robot.

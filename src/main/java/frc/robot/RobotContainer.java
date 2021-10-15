@@ -230,6 +230,7 @@ public class RobotContainer {
 
     autoTab.add("Location", locationSelector).withWidget(BuiltInWidgets.kComboBoxChooser);
 
+    // TODO: Remove the buttons after testing confirms that the location selector works.
     InstantCommand setPosition;
     setPosition = new InstantCommand(() -> {
                           double distanceMeters = aimingLidar.getDistance()/100.0;

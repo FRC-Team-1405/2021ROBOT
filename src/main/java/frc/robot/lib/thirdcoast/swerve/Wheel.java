@@ -50,7 +50,6 @@ public class Wheel {
   private final CANCoder encoder;
   private final Translation2d position;
   protected DoubleConsumer driver;
-  private boolean isInverted = false;
 
   /**
    * This constructs a wheel with supplied azimuth and drive talons.
@@ -96,13 +95,6 @@ public class Wheel {
 
     double azimuthPosition = encoder.getPosition();
     double azimuthError = Math.IEEEremainder(azimuth - azimuthPosition, TICKS);
-
-    // minimize azimuth rotation, reversing drive if necessary
-    isInverted = Math.abs(azimuthError) > 0.25 * TICKS;
-    if (isInverted) {
-      azimuthError -= Math.copySign(0.5 * TICKS, azimuthError);
-      drive = -drive;
-    }
 
     azimuthTalon.set(MotionMagic, azimuthPosition + azimuthError);
     driver.accept(drive);
@@ -210,10 +202,6 @@ public class Wheel {
     return driveSetpointMax;
   }
 
-  public boolean isInverted() {
-    return isInverted;
-  } 
-
   public double getAzimuthRadians() {
     double position = encoder.getPosition();
     double azimuth = Math.IEEEremainder( position, TICKS);
@@ -232,21 +220,7 @@ public class Wheel {
     double angle = MathTools.map(state.angle.getRadians(), 0, 2 * Math.PI, 0, 4095); 
     double speed = state.speedMetersPerSecond * Constants.VelocityConversions.SwerveMetersPerSecondToSensorVelocity;   
     
-    isInverted = Math.abs(angle) > 0.25 * TICKS;
-    if (isInverted) {
-      angle -= Math.copySign(0.5 * TICKS, angle);
-      speed = -speed;
-    }
-    // if(angle >= 2048){ 
-    //   angle = angle - 4095; 
-    //   } 
-      
-    // if(angle <= -2048){ 
-    //   angle = angle + 4095;
-    // }
-      SmartDashboard.putNumber("Commanded Angle", angle); 
-
-    
+    SmartDashboard.putNumber("Commanded Angle", angle); 
 
     azimuthTalon.set(MotionMagic, angle);
     driver.accept(speed);

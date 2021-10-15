@@ -883,4 +883,20 @@ return runTrajecotory(trajectory);
 return runTrajecotory(trajectory);
 
   }
+
+  /**
+   * Set starting location for the robot in autonomous.
+   * 
+   * @param startingLocation  Starting location of the robot.
+   * 
+   * @return Command to set the starting location of the robot.
+   */
+  private Command setStartingLocation(StartingLocation startingLocation) {
+    double distanceMeters = aimingLidar.getDistance() / 100.0;
+    Double yLoc = startingLocation.value;
+
+    return new InstantCommand(() -> {
+      swerveDriveBase.resetOdometry(new Pose2d(-distanceMeters, yLoc, swerveDriveBase.getPose().getRotation()));
+    });
+  }
 }

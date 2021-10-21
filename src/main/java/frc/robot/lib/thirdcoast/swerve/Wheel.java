@@ -9,6 +9,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 
+import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.geometry.Translation2d;
 import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
@@ -50,6 +51,9 @@ public class Wheel {
   private final CANCoder encoder;
   private final Translation2d position;
   protected DoubleConsumer driver;
+  private boolean isInverted = false; 
+
+  SlewRateLimiter optimizeJerkReducer = new SlewRateLimiter(1,0); 
 
   /**
    * This constructs a wheel with supplied azimuth and drive talons.
@@ -95,6 +99,13 @@ public class Wheel {
 
     double azimuthPosition = encoder.getPosition();
     double azimuthError = Math.IEEEremainder(azimuth - azimuthPosition, TICKS);
+
+    // minimize azimuth rotation, reversing drive if necessary
+    // isInverted = Math.abs(azimuthError) > 0.25 * TICKS;
+    // if (isInverted) {
+    //   azimuthError -= (Math.copySign(0.5 * TICKS, azimuthError));
+    //   drive = optimizeJerkReducer.calculate(-drive);
+    // }
 
     azimuthTalon.set(MotionMagic, azimuthPosition + azimuthError);
     driver.accept(drive);
@@ -178,7 +189,7 @@ public class Wheel {
    */
   public int getAzimuthAbsolutePosition() {
     // ToDo need CANcoder position
-    return (int) encoder.getPosition();  }
+    return (int) encoder.getAbsolutePosition();}
 
   /**
    * Get the azimuth Talon controller.

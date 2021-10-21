@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
+import edu.wpi.first.wpilibj.SlewRateLimiter;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController;
@@ -96,6 +97,11 @@ public class RobotContainer {
 
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
 
+  SlewRateLimiter xRateLimit = new SlewRateLimiter(1, 0); 
+
+  SlewRateLimiter yRateLimit = new SlewRateLimiter(1, 0); 
+
+  SlewRateLimiter yawRateLimiter = new SlewRateLimiter(4, 0);
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -153,17 +159,17 @@ public class RobotContainer {
   }
 
   public double getForwardSwerve() {
-    return -driver.getY(Hand.kLeft); 
+    return xRateLimit.calculate(driver.getY(Hand.kLeft)); 
   }
 
   /** Left stick Y (left-right) axis. */
   public double getStrafeSwerve() {
-    return -driver.getX(Hand.kLeft);
+    return yRateLimit.calculate(driver.getX(Hand.kLeft));
   } 
 
   /** Right stick Y (left-right) axis. */
   public double getYawSwerveXboxController() {
-    return -driver.getX(Hand.kRight); 
+    return yawRateLimiter.calculate(-driver.getX(Hand.kRight));
   }  
 
   public double getYawSwerveLogitech() { 

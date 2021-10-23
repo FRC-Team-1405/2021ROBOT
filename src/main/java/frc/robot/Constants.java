@@ -139,7 +139,7 @@ public final class Constants {
 
     public static class VelocityConversions{
         public final static double SensorTimePerSec = 10;
-        public final static double WheelCircumference = (6 * Math.PI);
+        public final static double WheelCircumference = (8 * Math.PI);
         public final static double SensorUnitsPerRotation = 2048; 
         public final static double SwerveSensorUnitsPerRotation = 2048; 
         public final static double SwerveWheelCircumference = (4 * Math.PI); 

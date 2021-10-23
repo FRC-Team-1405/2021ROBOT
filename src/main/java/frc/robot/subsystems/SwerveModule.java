@@ -8,10 +8,15 @@ import com.ctre.phoenix.motorcontrol.TalonFXSensorCollection;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.sensors.CANCoder;
 
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class SwerveModule extends SubsystemBase {
+  TalonFXSensorCollection collection;
+  
   private TalonFX drive;
   private CANCoder rotation;
 
@@ -21,7 +26,24 @@ public class SwerveModule extends SubsystemBase {
     drive = new TalonFX(driveId);
 
     this.label = label;
+    collection = drive.getSensorCollection();
     display();
+  }
+
+  public SwerveModuleState getState() {
+    return new SwerveModuleState(rotationToMeter(collection.getIntegratedSensorVelocity()), new Rotation2d(degreeToMeter(rotation.getVelocity())));
+  }
+
+
+  //TODO:Add motor ratio to both functions
+  private double degreeToMeter(double degree) {
+    double meter = degree * 360 * Constants.VelocityConversions.WheelCircumference;
+    return meter;
+  }
+
+  private double rotationToMeter(double rotation) {
+    double meter = rotation * Constants.VelocityConversions.WheelCircumference;
+    return meter;
   }
 
   public void display() {
@@ -29,7 +51,6 @@ public class SwerveModule extends SubsystemBase {
     SmartDashboard.putNumber(label+"/Rotation Absolute Position", rotation.getAbsolutePosition());
     SmartDashboard.putNumber(label+"/Rotation Velocity", rotation.getVelocity());
   
-    TalonFXSensorCollection collection = drive.getSensorCollection();
     SmartDashboard.putNumber(label+"/Drive Position", collection.getIntegratedSensorPosition());
     SmartDashboard.putNumber(label+"/Drive Absolute Position", collection.getIntegratedSensorAbsolutePosition());
     SmartDashboard.putNumber(label+"/Drive Velocity", collection.getIntegratedSensorVelocity());

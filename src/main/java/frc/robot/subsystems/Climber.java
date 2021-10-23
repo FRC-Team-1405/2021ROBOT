@@ -98,8 +98,8 @@ public class Climber extends SubsystemBase {
   }
 
   public void stop(){
-    leftClimbMotor.set(ControlMode.Position, leftClimbMotor.getSelectedSensorPosition());
-    rightClimbMotor.set(ControlMode.Position, rightClimbMotor.getSelectedSensorPosition());
+    leftClimbMotor.set(ControlMode.MotionMagic, leftClimbMotor.getSelectedSensorPosition());
+    rightClimbMotor.set(ControlMode.MotionMagic, rightClimbMotor.getSelectedSensorPosition());
   }
 
   public void moveLeft(double distance){ 
@@ -108,7 +108,7 @@ public class Climber extends SubsystemBase {
      
     if(enabled && climbInPosition_left()){
       int target = (int) leftClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
-      leftClimbMotor.set(ControlMode.Position, target);
+      leftClimbMotor.set(ControlMode.MotionMagic, target);
     }
   }
 
@@ -118,7 +118,7 @@ public class Climber extends SubsystemBase {
      
     if(enabled && climbInPosition_right()){
       int target = (int) rightClimbMotor.getSelectedSensorPosition() + (int)(distance * moveRange);
-      rightClimbMotor.set(ControlMode.Position, target);
+      rightClimbMotor.set(ControlMode.MotionMagic, target);
     }
   }
   //highest position
@@ -128,8 +128,8 @@ public class Climber extends SubsystemBase {
      
     if(enabled){
       int targetPosition = (int)SmartDashboard.getNumber("Climber/Climb Position", reachPosition);
-      leftClimbMotor.set(ControlMode.Position, targetPosition);
-      rightClimbMotor.set(ControlMode.Position, targetPosition);
+      leftClimbMotor.set(ControlMode.MotionMagic, targetPosition);
+      rightClimbMotor.set(ControlMode.MotionMagic, targetPosition);
     }
   } 
   //45"
@@ -138,9 +138,9 @@ public class Climber extends SubsystemBase {
       return ;
      
     if(enabled){
-      int targetPosition = (int)SmartDashboard.getNumber("Low Position", lowPosition);
-      rightClimbMotor.set(ControlMode.Position, targetPosition); 
-      leftClimbMotor.set(ControlMode.Position, targetPosition);
+      int targetPosition = (int)SmartDashboard.getNumber("Climber/Low Position", lowPosition);
+      rightClimbMotor.set(ControlMode.MotionMagic, targetPosition); 
+      leftClimbMotor.set(ControlMode.MotionMagic, targetPosition);
     }
   }
 
@@ -149,9 +149,9 @@ public class Climber extends SubsystemBase {
     if (leftZeroize != Zeroize.Ready || rightZeroize != Zeroize.Ready)
       return ;
 
-    int targetPosition = (int)SmartDashboard.getNumber("Home Position", homePosition);
-    leftClimbMotor.set(ControlMode.Position, targetPosition);
-    rightClimbMotor.set(ControlMode.Position, targetPosition);
+    int targetPosition = (int)SmartDashboard.getNumber("Climber/Home Position", homePosition);
+    leftClimbMotor.set(ControlMode.MotionMagic, targetPosition);
+    rightClimbMotor.set(ControlMode.MotionMagic, targetPosition);
   } 
 
   private Zeroize leftZeroize = Zeroize.Ready;  // disable auto zeroize

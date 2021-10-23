@@ -47,7 +47,6 @@ public class Wheel {
   private final double driveSetpointMax;
   private final BaseTalon driveTalon;
   private final TalonFX azimuthTalon;
-  private final CANCoder encoder;
   private final Translation2d position;
   protected DoubleConsumer driver;
 
@@ -63,16 +62,15 @@ public class Wheel {
    * @param drive the configured drive TalonFX
    * @param driveSetpointMax scales closed-loop drive output to this value when drive setpoint = 1.0
    */
-  public Wheel(TalonFX azimuth, BaseTalon drive, CANCoder encoder, Translation2d position, double driveSetpointMax) {
+  public Wheel(TalonFX azimuth, BaseTalon drive, Translation2d position, double driveSetpointMax) {
     this.driveSetpointMax = driveSetpointMax;
     azimuthTalon = Objects.requireNonNull(azimuth);
     driveTalon = Objects.requireNonNull(drive);
-    this.encoder = Objects.requireNonNull(encoder);
     this.position = Objects.requireNonNull(position);
 
     setDriveMode(TELEOP);
     
-    logger.config(String.format("azimuth = %d, drive = %d, encoder = %d", azimuthTalon.getDeviceID(), driveTalon.getDeviceID(), encoder.getDeviceID()));
+    logger.config(String.format("azimuth = %d, drive = %d", azimuthTalon.getDeviceID(), driveTalon.getDeviceID()));
     logger.config(String.format("driveSetpointMax = %f", driveSetpointMax));
     if (driveSetpointMax == 0.0) logger.warning("driveSetpointMax may not have been configured");
   }
@@ -93,7 +91,7 @@ public class Wheel {
 
     azimuth *= -TICKS; // flip azimuth, hardware configuration dependent
 
-    double azimuthPosition = encoder.getPosition();
+    double azimuthPosition = azimuthTalon.getSelectedSensorPosition(); // -180 to 180
     double azimuthError = Math.IEEEremainder(azimuth - azimuthPosition, TICKS);
 
     azimuthTalon.set(MotionMagic, azimuthPosition + azimuthError);
@@ -166,7 +164,7 @@ public class Wheel {
    */
   public void setAzimuthZero(int zero) {
     int azimuthSetpoint = getAzimuthAbsolutePosition() - zero;
-    ErrorCode err = encoder.setPosition(azimuthSetpoint);
+    ErrorCode err = azimuthTalon.setSelectedSensorPosition(azimuthSetpoint);
     Errors.check(err, logger);
     azimuthTalon.set(MotionMagic, azimuthSetpoint);
   }
@@ -178,7 +176,8 @@ public class Wheel {
    */
   public int getAzimuthAbsolutePosition() {
     // ToDo need CANcoder position
-    return (int) encoder.getPosition();  }
+    return (int) azimuthTalon.getSelectedSensorPosition();
+  }
 
   /**
    * Get the azimuth Talon controller.
@@ -203,7 +202,7 @@ public class Wheel {
   }
 
   public double getAzimuthRadians() {
-    double position = encoder.getPosition();
+    double position = azimuthTalon.getSelectedSensorPosition();
     double azimuth = Math.IEEEremainder( position, TICKS);
     return (double)azimuth/4096.0 * 2.0 * Math.PI; 
   }

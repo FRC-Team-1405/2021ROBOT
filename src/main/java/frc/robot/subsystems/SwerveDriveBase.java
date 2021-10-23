@@ -93,7 +93,7 @@ public class SwerveDriveBase extends SubsystemBase {
     TalonFX driveTalon = new TalonFX(driveId);
     CANCoder encoder = new CANCoder(encoderId);
 
-    return new Wheel(azimuthTalon, driveTalon, encoder, position, DRIVE_SETPOINT_MAX);
+    return new Wheel(azimuthTalon, driveTalon, position, DRIVE_SETPOINT_MAX);
   }  
 
   @Override

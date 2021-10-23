@@ -310,9 +310,9 @@ public class RobotContainer {
       // resetTurret.setName("Reset Turret");
       // testCommandsTab.add(resetTurret);
 
-      // InstantCommand resetScizzorsCommand = new InstantCommand(climber::resetClimberEncoders);
-      // resetScizzorsCommand.setName("Reset Scizzors");
-      // testCommandsTab.add(resetScizzorsCommand);
+      InstantCommand resetScizzorsCommand = new InstantCommand(climber::resetClimberEncoders);
+      resetScizzorsCommand.setName("Reset Scizzors");
+      testCommandsTab.add(resetScizzorsCommand);
 
       // InstantCommand toggleClimbLimits = new InstantCommand(climber::toggleLimits);
       // toggleClimbLimits.setName("Toggle Climb Limits");
@@ -360,11 +360,16 @@ public class RobotContainer {
           .whenPressed(new InstantCommand(intake::enable, intake)) 
           .whenReleased(new InstantCommand(intake::disable, intake)); 
     
-    SmartDashboard.putBoolean("Intake Deployed", false);
+    SmartDashboard.putBoolean("Intake Deployed", intake.isDeployed());
     new JoystickButton(driver, XboxController.Button.kBumperLeft.value) 
-          .toggleWhenPressed(new StartEndCommand( intake::deploy,
-                                                  intake::retract,
-                                                  intake));
+          .whenPressed( new InstantCommand( () -> {
+            if (intake.isDeployed()){
+              intake.retract();
+            } else {
+              intake.deploy();
+            }
+            SmartDashboard.putBoolean("Intake Deployed", intake.isDeployed());
+          }));
 
     new JoystickButton(driver, XboxController.Button.kStickRight.value) 
           .whileHeld( new DriveByAngle( this::getForwardSwerve, 
@@ -384,6 +389,7 @@ public class RobotContainer {
     new JoystickButton(driver, XboxController.Button.kBack.value)
       .and( new JoystickButton(driver, XboxController.Button.kStart.value) )
       .whenActive( new InstantCommand( () -> {
+        intake.LockDeployed();
         climber.toggleEnable();
       }));
 

@@ -11,9 +11,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -23,13 +20,12 @@ public class Intake extends SubsystemBase {
    */
 
   private WPI_TalonSRX intakeTalon = new WPI_TalonSRX(Constants.intakeTalon); 
-  private DoubleSolenoid intakeDeployLeft = new DoubleSolenoid(0, 1); 
-  private DoubleSolenoid intakeDeployRight = new DoubleSolenoid(2, 3); 
+  private WPI_TalonSRX intakeDeploy = new WPI_TalonSRX(Constants.intakeDeploy); 
+  
 
   public Intake() {
     intakeTalon.set(ControlMode.PercentOutput, 0);
-    intakeDeployLeft.set(Value.kReverse);
-    intakeDeployRight.set(Value.kReverse);
+    intakeDeploy.set(ControlMode.PercentOutput, 0);
   }
 
   @Override
@@ -37,15 +33,28 @@ public class Intake extends SubsystemBase {
     
   }
 
+  private boolean isDeployed = false;
+  public boolean isDeployed(){
+    return isDeployed;
+  }
+  
   public void deploy(){ 
-    intakeDeployLeft.set(Value.kForward);
-    intakeDeployRight.set(Value.kForward);
+    isDeployed=true;
+    intakeDeploy.set(ControlMode.PercentOutput, 0.5);
   } 
 
   public void retract(){
-    intakeDeployLeft.set(Value.kReverse);
-    intakeDeployRight.set(Value.kReverse);
+    if (!deployLocked){
+      isDeployed=false;
+      intakeDeploy.set(ControlMode.PercentOutput, -0.6);
+    }
   } 
+
+  private boolean deployLocked = false;
+  public void LockDeployed() {
+    deploy();
+    deployLocked = true;
+  }
 
   public void enable(){
     intakeTalon.set(ControlMode.PercentOutput, Constants.IntakeConstants.SPEED);

@@ -44,7 +44,7 @@ public class ShootContinous extends CommandBase {
     shooter.setVelocity((int) speed.getAsDouble()); 
     hood.setPosition((int) angle.getAsDouble());
     limelight.setPipeline(Constants.LimelightConfig.TargetPipeline);
-    limelight.setLED(Limelight.LED.Default);
+    limelight.setLED(Limelight.LED.On);
   }
 
   // Called every time the scheduler runs while the command is scheduled.

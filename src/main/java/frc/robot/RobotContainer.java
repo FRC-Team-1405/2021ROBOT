@@ -119,8 +119,8 @@ public class RobotContainer {
     var climberControl = new RunCommand( () -> {
       double left = operator.getY(Hand.kLeft); 
       double right = operator.getY(Hand.kRight); 
-      climber.moveLeft(left < Math.abs(.35) ? 0 : left); 
-      climber.moveRight(right < Math.abs(.35) ? 0 : right);
+      climber.moveLeft((Math.abs(left) < .35) ? 0 : left); 
+      climber.moveRight((Math.abs(right) < .35) ? 0 : right);
     }, climber); 
     climberControl.setName("Climber Control"); 
     climber.setDefaultCommand(climberControl);
@@ -209,7 +209,7 @@ public class RobotContainer {
     InstantCommand setPosition;
     setPosition = new InstantCommand(() -> {
                           double distanceMeters = aimingLidar.getDistance()/100.0;
-                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters,  3.1, swerveDriveBase.getPose().getRotation()) );
+                          swerveDriveBase.resetOdometry( new Pose2d(-distanceMeters,  1.4, swerveDriveBase.getPose().getRotation()) );
                         }) ;
     setPosition.setName("Left");
     autoTab.add( setPosition );
@@ -261,7 +261,7 @@ public class RobotContainer {
       var targetCamera = new StartEndCommand( 
           () -> { 
             limelight.setPipeline(Constants.LimelightConfig.TargetPipeline);
-            limelight.setLED(Limelight.LED.Default);
+            limelight.setLED(Limelight.LED.On);
           },
           () -> {
             limelight.setLED(Limelight.LED.Off);
@@ -485,7 +485,9 @@ public class RobotContainer {
       .and( new JoystickButton(operator, XboxController.Button.kStart.value) )
       .whenActive( new InstantCommand( () -> {
         climber.toggleEnable();
-      }));
+      })); 
+
+    new JoystickButton(operator, XboxController.Button.kStart.value).whenPressed(new InstantCommand(hood::zeroize, hood)); 
   }
 
   private void configureDemoButtonBindings(){ 

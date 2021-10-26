@@ -434,8 +434,8 @@ public class RobotContainer {
      * +Right joystick:
      * +Start & Back: lock | unlock climb controls 
      */
-    new JoystickButton(driver, XboxController.Button.kBumperLeft.value)
-      .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
+     new JoystickButton(operator, XboxController.Button.kBumperLeft.value)
+       .whenPressed(new SequentialCommandGroup(new InstantCommand(shooter::index), new WaitCommand(.5), new InstantCommand(shooter::close)));    
       
     new JoystickButton(operator, XboxController.Button.kA.value)
       .whileHeld( new ShootContinous( shooter, 

@@ -98,21 +98,6 @@ public class RobotContainer {
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
 
   /**
-   * Enum containing all potential starting positions for the robot.
-   */
-  private enum StartingLocation {
-    LEFT(3.1),
-    CENTER(0.0),
-    RIGHT(-1.6);
-
-    private final double value;
-
-    StartingLocation(final double value) {
-      this.value = value;
-    }
-  }
-
-  /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
@@ -627,16 +612,6 @@ public class RobotContainer {
           this::autoSelect
       );
 
-  private final Command locationCommand =
-      new SelectCommand(
-          Map.ofEntries(
-              Map.entry(0, setStartingLocation(StartingLocation.LEFT)),
-              Map.entry(1, setStartingLocation(StartingLocation.CENTER)),
-              Map.entry(2, setStartingLocation(StartingLocation.RIGHT))
-          ),
-          this::locationSelect
-      );
-
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -906,28 +881,16 @@ return runTrajecotory(trajectory);
 
   }
 
-  /**
-   * Retrieves the location command to use in the main {@link Robot} class.
-   *
-   * @return Command to run in autonomous.
-   */
-  public Command getLocationCommand() {
-    return locationCommand;
+  public void setStartLocation(){
+    switch (this.locationSelector.getSelected()){
+      case 0: this.setStartingLocation(1.4);   break;
+      case 1: this.setStartingLocation(0);     break;
+      case 2: this.setStartingLocation(-1.6);  break;
+    }
   }
 
-  /**
-   * Set starting location for the robot in autonomous.
-   * 
-   * @param startingLocation  Starting location of the robot.
-   * 
-   * @return Command to set the starting location of the robot.
-   */
-  private Command setStartingLocation(StartingLocation startingLocation) {
+  private void setStartingLocation(double yPos) {
     double distanceMeters = aimingLidar.getDistance() / 100.0;
-    Double yLoc = startingLocation.value;
-
-    return new InstantCommand(() -> {
-      swerveDriveBase.resetOdometry(new Pose2d(-distanceMeters, yLoc, swerveDriveBase.getPose().getRotation()));
-    });
+    swerveDriveBase.resetOdometry(new Pose2d(-distanceMeters, yPos, swerveDriveBase.getPose().getRotation()));
   }
 }

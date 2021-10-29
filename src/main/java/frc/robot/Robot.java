@@ -41,6 +41,7 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    m_robotContainer.setStartLocation();
   }
 
   /**
@@ -74,8 +75,8 @@ public class Robot extends TimedRobot {
     // m_robotContainer.launcher.stopTurret();
     m_robotContainer.swerveDriveBase.stop();
 
-    m_robotContainer.getLocationCommand().execute();
-
+    m_robotContainer.setStartLocation();
+   
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();

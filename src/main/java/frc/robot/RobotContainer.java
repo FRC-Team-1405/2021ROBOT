@@ -66,6 +66,7 @@ import frc.robot.lib.SmartSupplier;
 import frc.robot.lib.thirdcoast.swerve.SwerveDrive.DriveMode;
 import frc.robot.sensors.LidarLitePWM;
 import frc.robot.sensors.Limelight;
+import frc.robot.sensors.Limelight.LED;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SwerveDriveBase;
 
@@ -83,7 +84,7 @@ public class RobotContainer {
 
   // private final ArcadeDrive driveBase = new ArcadeDrive();
   public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase(); 
-  private Limelight limelight = new Limelight(new Limelight.Position(41.91, 30.12));
+  private Limelight limelight = new Limelight(new Limelight.Position(41.91, 39.69));
 
   private XboxController driver = new XboxController(Constants.pilot); 
   private XboxController operator = new XboxController(Constants.operator); 
@@ -396,8 +397,9 @@ public class RobotContainer {
             SmartDashboard.putBoolean("Intake Deployed", intake.isDeployed());
           }));
 
+
     new JoystickButton(driver, XboxController.Button.kStickRight.value) 
-          .whileHeld( new DriveByAngle( this::getForwardSwerve, 
+         .whileHeld( new DriveByAngle( this::getForwardSwerve, 
                                         this::getStrafeSwerve, 
                                         isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
                                         this::angleToTarget, 
@@ -543,6 +545,7 @@ public class RobotContainer {
   }
 
   private double angleToTarget(){
+    limelight.setLED(LED.On);
     Pose2d robotPosition = swerveDriveBase.getPose() ;
     double robotAngle = robotPosition.getRotation().getDegrees(); 
 
@@ -556,8 +559,8 @@ public class RobotContainer {
     odometryAngle = String.format("%.1f", value);
 
     if (limelight.getPipeline() == Constants.LimelightConfig.TargetPipeline && limelight.hasTarget()) {
-      value = limelight.getTA();
-      odometryAngle = String.format("%.1f", value);
+      value = limelight.getTX();
+      limelightAngle = String.format("%.1f", value);
     }
 
     SmartDashboard.putString("Angle/Odomentry",  odometryAngle) ;

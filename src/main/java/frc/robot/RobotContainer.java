@@ -97,6 +97,21 @@ public class RobotContainer {
   private double speedLimit = new SmartSupplier("Drivebase/SpeedLimit", 0.35).getAsDouble();
 
   /**
+   * Enum containing all potential starting positions for the robot.
+   */
+  private enum StartingLocation {
+    LEFT(3.1),
+    CENTER(0.0),
+    RIGHT(-1.6);
+
+    private final double value;
+
+    StartingLocation(final double value) {
+      this.value = value;
+    }
+  }
+
+  /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
@@ -183,6 +198,7 @@ public class RobotContainer {
   }
 
   SendableChooser<Integer> autoSelector; 
+  SendableChooser<Integer> locationSelector;
    
   private void initShuffleBoard(){
     boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
@@ -199,6 +215,12 @@ public class RobotContainer {
     autoSelector.addOption("Search Path B Red", 8); 
     autoSelector.addOption("Bounce", 9);
     autoSelector.setDefaultOption("Do nothing", 0); 
+
+    locationSelector = new SendableChooser<Integer>();
+    locationSelector.addOption("Left", 0);
+    locationSelector.addOption("Center", 1);
+    locationSelector.addOption("Right", 2);
+    locationSelector.setDefaultOption("Center", 1);
     
     ShuffleboardTab autoTab = Shuffleboard.getTab("Auto") ;
     autoTab.add(autoSelector)
@@ -206,6 +228,9 @@ public class RobotContainer {
     SmartDashboard.putNumber("Auto/Selected_Auto", 1);
     autoTab.add("Auto/Initial_Delay", 0); 
 
+    autoTab.add("Location", locationSelector).withWidget(BuiltInWidgets.kComboBoxChooser);
+
+    // TODO: Remove the buttons after testing confirms that the location selector works.
     InstantCommand setPosition;
     setPosition = new InstantCommand(() -> {
                           double distanceMeters = aimingLidar.getDistance()/100.0;
@@ -569,8 +594,12 @@ public class RobotContainer {
   // An example selector method for the selectcommand.  Returns the selector that will select
   // which command to run.  Can base this choice on logical conditions evaluated at runtime.
   
-  private int select() { 
+  private int autoSelect() { 
     return (int) autoSelector.getSelected();
+  }
+
+  private int locationSelect() {
+    return (int) locationSelector.getSelected();
   }
 
   // An example selectcommand.  Will select from the three commands based on the value returned
@@ -592,7 +621,17 @@ public class RobotContainer {
               Map.entry(8, galacticSearchPathBRed()), 
               Map.entry(9, bounce())
           ),
-          this::select
+          this::autoSelect
+      );
+
+  private final Command locationCommand =
+      new SelectCommand(
+          Map.ofEntries(
+              Map.entry(0, setStartingLocation(StartingLocation.LEFT)),
+              Map.entry(1, setStartingLocation(StartingLocation.CENTER)),
+              Map.entry(2, setStartingLocation(StartingLocation.RIGHT))
+          ),
+          this::locationSelect
       );
 
   /**
@@ -862,5 +901,30 @@ return runTrajecotory(trajectory);
       new Pose2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
 return runTrajecotory(trajectory);
 
+  }
+
+  /**
+   * Retrieves the location command to use in the main {@link Robot} class.
+   *
+   * @return Command to run in autonomous.
+   */
+  public Command getLocationCommand() {
+    return locationCommand;
+  }
+
+  /**
+   * Set starting location for the robot in autonomous.
+   * 
+   * @param startingLocation  Starting location of the robot.
+   * 
+   * @return Command to set the starting location of the robot.
+   */
+  private Command setStartingLocation(StartingLocation startingLocation) {
+    double distanceMeters = aimingLidar.getDistance() / 100.0;
+    Double yLoc = startingLocation.value;
+
+    return new InstantCommand(() -> {
+      swerveDriveBase.resetOdometry(new Pose2d(-distanceMeters, yLoc, swerveDriveBase.getPose().getRotation()));
+    });
   }
 }

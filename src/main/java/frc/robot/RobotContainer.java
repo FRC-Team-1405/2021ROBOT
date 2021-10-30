@@ -79,8 +79,8 @@ import frc.robot.subsystems.SwerveDriveBase;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here... 
-
   private static final Logger logger = Logger.getLogger(RobotContainer.class.getName());
+  private static boolean enableOdometryAngle = false;
 
   // private final ArcadeDrive driveBase = new ArcadeDrive();
   public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase(); 
@@ -401,8 +401,8 @@ public class RobotContainer {
     new JoystickButton(driver, XboxController.Button.kBack.value)
       .and( new JoystickButton(driver, XboxController.Button.kStart.value) )
       .whenActive( new InstantCommand( () -> {
-        intake.LockDeployed();
         climber.toggleEnable();
+        intake.LockIntake(climber.isEnabled());
       }));
 
     new JoystickButton(driver, XboxController.Button.kY.value)
@@ -497,6 +497,7 @@ public class RobotContainer {
       .and( new JoystickButton(operator, XboxController.Button.kStart.value) )
       .whenActive( new InstantCommand( () -> {
         climber.toggleEnable();
+        intake.LockIntake(climber.isEnabled());
       })); 
 
     new JoystickButton(operator, XboxController.Button.kStart.value).whenPressed(new InstantCommand(hood::zeroize, hood)); 
@@ -538,9 +539,13 @@ public class RobotContainer {
     String limelightAngle = "N/A";
     double value;
     
-    value = robotPosition.getX() == 0.0
-                ? 0.0
-                : robotAngle - Math.toDegrees( Math.atan( robotPosition.getY() / robotPosition.getX() )) ;
+    if (enableOdometryAngle){
+      value = robotPosition.getX() == 0.0
+      ? 0.0
+      : robotAngle - Math.toDegrees( Math.atan( robotPosition.getY() / robotPosition.getX() )) ;
+    } else {
+      value = 0.0;
+    }
     odometryAngle = String.format("%.1f", value);
 
     if (limelight.getPipeline() == Constants.LimelightConfig.TargetPipeline && limelight.hasTarget()) {

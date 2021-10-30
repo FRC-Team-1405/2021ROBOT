@@ -51,9 +51,11 @@ public class Intake extends SubsystemBase {
   } 
 
   private boolean deployLocked = false;
-  public void LockDeployed() {
-    deploy();
-    deployLocked = true;
+  public void LockIntake(boolean lock) {
+    if (lock){
+      deploy();
+    }
+    deployLocked = lock;
   }
 
   public void enable(){

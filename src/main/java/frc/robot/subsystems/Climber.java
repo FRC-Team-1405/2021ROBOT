@@ -82,6 +82,10 @@ public class Climber extends SubsystemBase {
     return rightClimbMotor.getClosedLoopError(0) < 3000;
 }
 
+  public boolean isEnabled(){
+    return enabled;
+  }
+  
   public void toggleEnable(){
     enabled = !enabled;
     SmartDashboard.putBoolean("Climb Enabled", enabled);

@@ -68,6 +68,7 @@ import frc.robot.lib.SmartSupplier;
 import frc.robot.lib.thirdcoast.swerve.SwerveDrive.DriveMode;
 import frc.robot.sensors.LidarLitePWM;
 import frc.robot.sensors.Limelight;
+import frc.robot.sensors.Limelight.LED;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.SwerveDriveBase;
 
@@ -85,7 +86,7 @@ public class RobotContainer {
 
   // private final ArcadeDrive driveBase = new ArcadeDrive();
   public final SwerveDriveBase swerveDriveBase = new SwerveDriveBase(); 
-  private Limelight limelight = new Limelight(new Limelight.Position(41.91, 30.12));
+  private Limelight limelight = new Limelight(new Limelight.Position(41.91, 39.69));
 
   private XboxController driver = new XboxController(Constants.pilot); 
   private XboxController operator = new XboxController(Constants.operator); 
@@ -192,6 +193,7 @@ public class RobotContainer {
   }
 
   SendableChooser<Integer> autoSelector; 
+  SendableChooser<Integer> locationSelector;
    
   private void initShuffleBoard(){
     boolean isLogitech = new SmartBooleanSupplier("Use Logitech Controller", false).getAsBoolean(); 
@@ -208,6 +210,12 @@ public class RobotContainer {
     autoSelector.addOption("Search Path B Red", 8); 
     autoSelector.addOption("Bounce", 9);
     autoSelector.setDefaultOption("Do nothing", 0); 
+
+    locationSelector = new SendableChooser<Integer>();
+    locationSelector.addOption("Left", 0);
+    locationSelector.addOption("Center", 1);
+    locationSelector.addOption("Right", 2);
+    locationSelector.setDefaultOption("Center", 1);
     
     ShuffleboardTab autoTab = Shuffleboard.getTab("Auto") ;
     autoTab.add(autoSelector)
@@ -215,6 +223,9 @@ public class RobotContainer {
     SmartDashboard.putNumber("Auto/Selected_Auto", 1);
     autoTab.add("Auto/Initial_Delay", 0); 
 
+    autoTab.add("Location", locationSelector).withWidget(BuiltInWidgets.kComboBoxChooser);
+
+    // TODO: Remove the buttons after testing confirms that the location selector works.
     InstantCommand setPosition;
     setPosition = new InstantCommand(() -> {
                           double distanceMeters = aimingLidar.getDistance()/100.0;
@@ -380,8 +391,9 @@ public class RobotContainer {
             SmartDashboard.putBoolean("Intake Deployed", intake.isDeployed());
           }));
 
+
     new JoystickButton(driver, XboxController.Button.kStickRight.value) 
-          .whileHeld( new DriveByAngle( this::getForwardSwerve, 
+         .whileHeld( new DriveByAngle( this::getForwardSwerve, 
                                         this::getStrafeSwerve, 
                                         isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
                                         this::angleToTarget, 
@@ -531,6 +543,7 @@ new Trigger( () -> { return driver.getTriggerAxis(Hand.kLeft) > 0.8 ? true : fal
   }
 
   private double angleToTarget(){
+    limelight.setLED(LED.On);
     Pose2d robotPosition = swerveDriveBase.getPose() ;
     double robotAngle = robotPosition.getRotation().getDegrees(); 
 
@@ -544,8 +557,8 @@ new Trigger( () -> { return driver.getTriggerAxis(Hand.kLeft) > 0.8 ? true : fal
     odometryAngle = String.format("%.1f", value);
 
     if (limelight.getPipeline() == Constants.LimelightConfig.TargetPipeline && limelight.hasTarget()) {
-      value = limelight.getTA();
-      odometryAngle = String.format("%.1f", value);
+      value = limelight.getTX();
+      limelightAngle = String.format("%.1f", value);
     }
 
     SmartDashboard.putString("Angle/Odomentry",  odometryAngle) ;
@@ -582,8 +595,12 @@ new Trigger( () -> { return driver.getTriggerAxis(Hand.kLeft) > 0.8 ? true : fal
   // An example selector method for the selectcommand.  Returns the selector that will select
   // which command to run.  Can base this choice on logical conditions evaluated at runtime.
   
-  private int select() { 
+  private int autoSelect() { 
     return (int) autoSelector.getSelected();
+  }
+
+  private int locationSelect() {
+    return (int) locationSelector.getSelected();
   }
 
   // An example selectcommand.  Will select from the three commands based on the value returned
@@ -605,7 +622,7 @@ new Trigger( () -> { return driver.getTriggerAxis(Hand.kLeft) > 0.8 ? true : fal
               Map.entry(8, galacticSearchPathBRed()), 
               Map.entry(9, bounce())
           ),
-          this::select
+          this::autoSelect
       );
 
   /**
@@ -875,5 +892,18 @@ return runTrajecotory(trajectory);
       new Pose2d(Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), Units.feetToMeters(0 * Constants.VelocityConversions.ScaleFactor), new Rotation2d(0)), config);
 return runTrajecotory(trajectory);
 
+  }
+
+  public void setStartLocation(){
+    switch (this.locationSelector.getSelected()){
+      case 0: this.setStartingLocation(1.4);   break;
+      case 1: this.setStartingLocation(0);     break;
+      case 2: this.setStartingLocation(-1.6);  break;
+    }
+  }
+
+  private void setStartingLocation(double yPos) {
+    double distanceMeters = aimingLidar.getDistance() / 100.0;
+    swerveDriveBase.resetOdometry(new Pose2d(-distanceMeters, yPos, swerveDriveBase.getPose().getRotation()));
   }
 }

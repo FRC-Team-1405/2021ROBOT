@@ -7,7 +7,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.SubsystemBase; 
 import frc.robot.Constants;
 
 public class Hood extends SubsystemBase {
@@ -15,7 +15,7 @@ public class Hood extends SubsystemBase {
   private int targetAngle;
 
   private WPI_TalonSRX angle = new WPI_TalonSRX(Constants.shooterAngle);
-  private static final double ZEROIZE_SPEED = -0.4;
+  private static final double ZEROIZE_SPEED = -0.4; 
 
   private enum Zeroize {
     Initialize{
@@ -45,7 +45,7 @@ public class Hood extends SubsystemBase {
   private Zeroize zeroizeState = Zeroize.Initialize;
 
   public Hood() {
-    stop();
+    stop(); 
   }
 
   @Override
@@ -70,6 +70,9 @@ public class Hood extends SubsystemBase {
     if (zeroizeState != Zeroize.Ready)
       return ;
 
+    if (Math.abs(targetAngle - position) > 250){
+      System.out.printf("Hood Position: %d\n", position);
+    }
     targetAngle = position;
     angle.set(ControlMode.MotionMagic, targetAngle);
   };
@@ -84,5 +87,6 @@ public class Hood extends SubsystemBase {
 
   public boolean isReady(){
     return Math.abs(getPosition() - targetAngle) < Constants.Hood.maxError;
+  } 
+
   }
-}

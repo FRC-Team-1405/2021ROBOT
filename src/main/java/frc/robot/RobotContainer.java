@@ -48,10 +48,12 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Intake;
 import frc.robot.commands.DriveByAngle;
+import frc.robot.commands.DriveRobotCentric;
 import frc.robot.commands.ShootContinous;
 import frc.robot.commands.SwerveDrive;
 import frc.robot.commands.TurnToAngle;
@@ -115,6 +117,13 @@ public class RobotContainer {
     var hoodControl = new RunCommand( () -> { hood.setPosition((int) DistanceToAngle.calculate(distanceToTarget())); }, hood );
     hoodControl.withName("Dynamic Hood Control");
     hood.setDefaultCommand( hoodControl ); 
+
+    var targeting = new RunCommand( () -> {
+      double distanceToTarget = distanceToTarget(); 
+      SmartDashboard.putBoolean("On Target", (Math.abs(distanceToTarget - 3.0) < 0) ? true : false); 
+      SmartDashboard.putBoolean("Left of Target", (distanceToTarget - 3.0 < 0) ? true : false); 
+      SmartDashboard.putBoolean("On Target", (distanceToTarget > - 3.0) ? true : false);
+    });
     
     var climberControl = new RunCommand( () -> {
       double left = operator.getY(Hand.kLeft); 
@@ -376,14 +385,18 @@ public class RobotContainer {
                                         this::getStrafeSwerve, 
                                         isLogitech ? this::getSpeedLimitLogitech : this::getSpeedLimitXboxController,
                                         this::angleToTarget, 
-                                        swerveDriveBase) );
-                        
-    new JoystickButton(driver, XboxController.Button.kB.value)
-          .whileHeld( new DriveByAngle( this::getForwardSwerve,
-                                        this::getStrafeSwerve,
-                                        isLogitech ? this::getStrafeSwerve : this::getSpeedLimitXboxController,
-                                        this.angleToDeltaAngle(180.0),
-                                        swerveDriveBase) );
+                                        swerveDriveBase) ); 
+
+
+
+new Trigger( () -> { return driver.getTriggerAxis(Hand.kLeft) > 0.8 ? true : false ;})
+//new RobotCentricTrigger(driver)
+          // .whileHeld( new DriveByAngle( this::getForwardSwerve,
+          //                               this::getStrafeSwerve,
+          //                               isLogitech ? this::getStrafeSwerve : this::getSpeedLimitXboxController,
+          //                               this.angleToDeltaAngle(180.0),
+          //                               swerveDriveBase) ); 
+         .whileActiveContinuous(new DriveRobotCentric(this::getForwardSwerve, this::getStrafeSwerve, this::getYawSwerveXboxController, this::getSpeedLimitXboxController, swerveDriveBase), true);
 
     // lock / unlock the climb controls
     new JoystickButton(driver, XboxController.Button.kBack.value)

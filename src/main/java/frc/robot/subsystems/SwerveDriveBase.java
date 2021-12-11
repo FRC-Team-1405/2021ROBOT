@@ -46,7 +46,12 @@ public class SwerveDriveBase extends SubsystemBase {
 
   public void drive(double forward, double strafe, double azimuth, double speedLimit) {
     swerve.drive(forward, strafe, azimuth, speedLimit);
-   } 
+   }  
+
+  public void driveRobotCentric(double forward, double strafe, double azimuth, double speedLimit){ 
+   swerve.setFieldOriented(false); 
+   swerve.drive(forward, strafe, azimuth, speedLimit); 
+  }
 
   // Drive the robot in a straight line without using navX
   public void driveStraight(double speed, double turnspeed, double speedLimit){

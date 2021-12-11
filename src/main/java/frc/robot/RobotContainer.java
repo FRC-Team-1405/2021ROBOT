@@ -42,9 +42,11 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -119,12 +121,15 @@ public class RobotContainer {
     hoodControl.withName("Dynamic Hood Control");
     hood.setDefaultCommand( hoodControl ); 
 
-    var targeting = new RunCommand( () -> {
-      double distanceToTarget = distanceToTarget(); 
-      SmartDashboard.putBoolean("On Target", (Math.abs(distanceToTarget - 3.0) < 0) ? true : false); 
-      SmartDashboard.putBoolean("Left of Target", (distanceToTarget - 3.0 < 0) ? true : false); 
-      SmartDashboard.putBoolean("On Target", (distanceToTarget > - 3.0) ? true : false);
-    });
+    Subsystem targetSubsystem = new Subsystem(){};
+    var targetControl = new RunCommand( () -> { 
+                                if (limelight.hasTarget()) {
+                                  SmartDashboard.putBoolean("TargetLocked", (Math.abs(limelight.getTX()) < 3.0) );
+                                } else {
+                                  SmartDashboard.putBoolean("TargetLocked", false);
+                                }
+                              }, targetSubsystem).withName("TargetLock");
+    targetSubsystem.setDefaultCommand(targetControl);
     
     var climberControl = new RunCommand( () -> {
       double left = operator.getY(Hand.kLeft); 
@@ -357,7 +362,7 @@ public class RobotContainer {
      * +Right joystick: swerve left/right
      * +Right joystick press: face target
      * +A: Climber to Home position
-     * +B: turn 180
+     * +B: 
      * +X: Climber to Climb position
      * +Y: Climber to Grab position
      * +Right bumper: intake
@@ -432,7 +437,14 @@ new Trigger( () -> { return driver.getTriggerAxis(Hand.kLeft) > 0.8 ? true : fal
                                            () -> { return false; }, 
                                            climber));
 
-    new JoystickButton(driver, XboxController.Button.kX.value)
+    new JoystickButton(driver, XboxController.Button.kB.value)
+      .whenPressed( new InstantCommand( () -> { if (limelight.getLED() == LED.Default) {
+        limelight.setLED(LED.On);
+      } else {
+        limelight.setLED(LED.Default);
+      }}, shooter)); 
+
+                                           new JoystickButton(driver, XboxController.Button.kX.value)
       .whenHeld( new FunctionalCommand( () -> { climber.reachLow(); }, 
                                            () -> { climber.reachLow(); }, 
                                            (interrupted) -> { climber.stop(); }, 

@@ -104,6 +104,16 @@ import edu.wpi.first.networktables.NetworkTableInstance;
           }
        }
 
+       public LED getLED(){
+           switch ((int)table.getEntry("ledMode").getDouble(0.0)){
+               case 0: return LED.Default;
+               case 1: return LED.Off;
+               case 2: return LED.Blink;
+               case 3: return LED.On;
+               default: return LED.Default;
+           }
+       }
+
        public void setCameraMode(boolean turnOn) {
         getCamMode.setNumber(turnOn ? 1 : 0);
         }
